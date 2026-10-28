@@ -10,10 +10,26 @@ import type { SceneProps } from "./types";
 
 const vertex = `varying vec2 vUv; varying vec3 vNormal; varying vec3 vView;
 void main(){vUv=uv; vec4 p=modelViewMatrix*vec4(position,1.);vNormal=normalize(normalMatrix*normal);vView=-p.xyz;gl_Position=projectionMatrix*p;}`;
-const sunFragment = `uniform float time; varying vec2 vUv;varying vec3 vNormal;varying vec3 vView;
-void main(){float n=sin(vUv.x*170.+sin(vUv.y*80.+time*.2)*2.)*sin(vUv.y*150.-time*.3);float cells=sin(vUv.x*340.+sin(vUv.y*240.)*2.)*.5+.5;float rim=pow(max(dot(normalize(vNormal),normalize(vView)),0.),.35);vec3 c=mix(vec3(1.,.18,.018),vec3(1.,.65,.18),.45+n*.12+cells*.18)*(.6+rim*.5);gl_FragColor=vec4(c*1.6,1.);
-#include <tonemapping_fragment>
-#include <colorspace_fragment>
+const sunFragment = `
+uniform float time;
+varying vec2 vUv;
+varying vec3 vNormal;
+varying vec3 vView;
+float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+float noise(vec2 p){
+ vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);
+ return mix(mix(hash(i),hash(i+vec2(1.,0.)),f.x),mix(hash(i+vec2(0.,1.)),hash(i+vec2(1.)),f.x),f.y);
+}
+void main(){
+ vec2 flow=vec2(time*.012,time*.003);
+ float granules=noise(vUv*vec2(300.,150.)+flow);
+ float field=noise(vUv*vec2(34.,17.)+flow*.3);
+ float cells=smoothstep(.1,.9,granules)*.6+field*.4;
+ float limb=pow(max(dot(normalize(vNormal),normalize(vView)),0.),.35);
+ vec3 c=mix(vec3(.9,.15,.008),vec3(1.,.57,.12),cells)*(.55+limb*.6);
+ gl_FragColor=vec4(c*1.5,1.);
+ #include <tonemapping_fragment>
+ #include <colorspace_fragment>
 }`;
 const haloFragment = `varying vec3 vNormal;varying vec3 vView;void main(){float f=pow(1.-abs(dot(normalize(vNormal),normalize(vView))),3.);gl_FragColor=vec4(.95,.36,.07,f*.23);
 #include <colorspace_fragment>
@@ -226,7 +242,7 @@ function Planet({
       {props.labels && (
         <Html
           portal={portal as React.RefObject<HTMLElement>}
-          position={[0, r + 0.7, 0]}
+          position={[0, props.selected === body.id ? r * 1.3 : r + 0.7, 0]}
           center
           zIndexRange={[10, 0]}
           style={{ pointerEvents: "auto" }}
