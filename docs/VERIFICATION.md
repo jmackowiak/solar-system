@@ -150,3 +150,55 @@ Podstawa decyzji: dokumentacja Google Search Central:
 [tytuły](https://developers.google.com/search/docs/appearance/title-link),
 [nazwa witryny](https://developers.google.com/search/docs/appearance/site-names),
 [JavaScript SEO](https://developers.google.com/search/docs/crawling-indexing/javascript/javascript-seo-basics).
+
+## Widok Drogi Mlecznej — 29 października 2026
+
+Model proceduralny i teksty NASA opisuje [GALAXY.md](GALAXY.md). Galaktyka
+współdzieli Canvas i kamerę z planetami. Zmiana skali kurczy/rozszerza układ
+planet i wygasza/odsłania galaktykę. Gwiazdy są statyczne; powrót zachowuje czas,
+tempo i pauzę symulacji planet. Języki EN/PL, mapa zastępcza 2D i ograniczenie
+ruchu obejmują oba poziomy. Moduł galaktyki jest ładowany na żądanie.
+
+Sprawdzanie typów, lint i build przeszły. Vitest/RTL: **14/14**. Pełny Playwright
+na produkcyjnym podglądzie: **58/58**, plus dwa scenariusze dotykowe pomijane
+wyłącznie na desktopie, przechodzące w projekcie mobilnym. Nowe scenariusze
+obejmują tożsamość Canvas przy zmianie skali, zachowanie czasu i ustawień,
+przerwanie lotu, szybkie zmiany celu, klawiaturę, reduced motion, tłumaczenia,
+rzeczywiste liczby punktów przy zmianie jakości, etykietę położenia i atlas 2D.
+Dodatkowo przechwycono początkowy moduł 3D w sieci i wybrano galaktykę przed
+jego wczytaniem — interfejs i scena wracają do poprawnego stanu.
+
+Kontrola obrazów wykryła skopiowany przez Fiber uniform przezroczystości:
+wartość źródłowa wynosiła 1, a materiał pozostawał przy 0,0305. Naprawiono
+synchronizację rzeczywistego uniformu w pętli Fiber. Samo zliczanie draw calls
+nie wykryło takiego błędu; gotowy obraz obejrzano ponownie na natywnym GPU.
+
+### Pomiary galaktyki
+
+Izolowany pomiar `HEADED=1 node scripts/measure-galaxy.mjs`: Apple M2, 16 GB,
+macOS 27.0.1, Chromium 156.0.0.0, ANGLE Metal Renderer: Apple M2. Produkcyjny
+podgląd na localhost, bez throttlingu, nowe konteksty przeglądarki, DPR 1.
+Tryb Auto: wysoka jakość przy 1440×900, niska przy 390×844. Ten drugi wariant
+jest emulacją rozmiaru/dotyku na M2, **nie fizycznym telefonem**.
+
+| Scenariusz | 1440×900 FPS / P95 | 390×844 (emulacja) FPS / P95 |
+| --- | ---: | ---: |
+| Wejście do galaktyki (~1,69 s) | 60,43 / 18,5 ms | 60,40 / 18,6 ms |
+| Obracanie kamerą przez 5 s | 60,09 / 18,6 ms | 60,11 / 18,6 ms |
+| Powrót do planet (~1,66 s) | 60,25 / 18,7 ms | 60,25 / 18,6 ms |
+
+Mediana klatki 16,7 ms. Drobne wartości ponad 60 FPS wynikają z granic próbek.
+W spoczynku: **0 dodatkowych klatek przez 120 odświeżeń przeglądarki**, czas
+symulacji bez zmian. Galaktyka: **8 draw calls**, 904 trójkąty znaczników oraz
+38 600 / 13 100 punktów przy wysokiej / niskiej jakości. Mierzymy dostarczone
+klatki sceny podczas rzeczywistych zdarzeń myszy, nie wynik Lighthouse ani czas
+samego shadera. Interakcje na fizycznym telefonie i długotrwałe ograniczenie
+termiczne GPU pozostają niezmierzone.
+
+Pierwsza użyteczna scena planet: 496,8 ms / 498,0 ms oraz **775 309 B transferu**
+przed gotowością (HTML, JS, CSS, fonty, podstawowe mapy). Galaktyka jest dodatkowym
+modułem około 3,9 kB przed kompresją, doczytywanym po wybraniu; bufory gwiazd
+powstają lokalnie. To pojedyncze próby lokalne, nie pomiar łącza internetowego.
+
+Pomiar galaktyki wykonano przed końcową aktualizacją obrazu Open Graph i jego
+tekstów alternatywnych. Ten obraz nie jest pobierany podczas uruchamiania sceny.

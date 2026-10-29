@@ -8,7 +8,7 @@ export const seo = {
       "Explore the Solar System and Milky Way in 3D. Fly between planets, find our place in the galaxy and discover facts from NASA.",
     locale: "en_GB",
     imageAlt:
-      "Orbita interactive 3D Solar System with the Sun, eight planets and their orbits.",
+      "The Milky Way in Orbita’s 3D atlas, with our Solar System marked in the Orion Spur.",
   },
   pl: {
     title: "Orbita — Układ Słoneczny i Droga Mleczna 3D",
@@ -16,7 +16,7 @@ export const seo = {
       "Odkrywaj Układ Słoneczny i Drogę Mleczną w 3D. Podróżuj między planetami, znajdź nasze miejsce w galaktyce i poznawaj fakty ze źródeł NASA.",
     locale: "pl_PL",
     imageAlt:
-      "Interaktywny Układ Słoneczny 3D w Orbicie: Słońce, osiem planet i ich orbity.",
+      "Droga Mleczna w atlasie 3D Orbita, z zaznaczonym położeniem Układu Słonecznego w Ostrodze Oriona.",
   },
 } as const;
 export function applySeo(language: keyof typeof seo) {

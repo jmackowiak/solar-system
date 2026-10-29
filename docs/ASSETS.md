@@ -44,7 +44,9 @@ pełne teksty w `public/fonts/*-OFL.txt`. Fonty są serwowane lokalnie, bez Goog
 ## Obraz podglądu linku
 
 `public/og-image.png` (1200×630) to zrzut własnej aplikacji Orbita w angielskiej
-wersji, z zatrzymaną symulacją w dniu 0. Wykorzystuje opisane wyżej lokalne mapy
-planet i fonty; nie pobiera dodatkowych cudzych ilustracji. Służy jako obraz
-Open Graph / Twitter. Regeneracja: uruchom produkcyjny podgląd na porcie 4174,
-a następnie `node scripts/capture-social-preview.mjs`.
+wersji, przedstawiający proceduralną Drogę Mleczną i znacznik naszego Układu
+Słonecznego. Używa lokalnych fontów i oryginalnej chmury punktów; nie pobiera
+cudzych ilustracji ani katalogu gwiazd. Służy jako obraz Open Graph / Twitter.
+Regeneracja: uruchom produkcyjny podgląd na porcie 4174, a następnie
+`ORBITA_SOCIAL_MODE=galaxy node scripts/capture-social-preview.mjs`. Pominięcie
+zmiennej generuje wariant z planetami.
