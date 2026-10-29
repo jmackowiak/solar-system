@@ -18,6 +18,21 @@ export function persistLanguage(language: Language) {
   }
 }
 export const english = {
+  "ATLAS UKŁADÓW PLANETARNYCH": "PLANETARY SYSTEMS ATLAS",
+  "Układ planetarny": "Planetary system",
+  "Obiekty układu planetarnego": "Planetary system objects",
+  "ZA GRANICĄ NASZEGO UKŁADU": "BEYOND OUR SOLAR SYSTEM",
+  "Odkrywaj planety": "Explore planets",
+  "potwierdzonych planet": "confirmed planets",
+  "lat świetlnych od nas": "light-years from us",
+  "Wygląd planet jest wizualizacją artystyczną.": "Planet appearances are artistic interpretations.",
+  "ODLEGŁOŚĆ OD GWIAZDY": "DISTANCE FROM STAR",
+  "SZACOWANA ŚREDNICA": "ESTIMATED DIAMETER",
+  "Reset: dzień 0, 0,25 dnia/s, widok całego układu": "Reset: day 0, 0.25 days/s, whole system view",
+  "UKŁADY W DRODZE MLECZNEJ": "SYSTEMS IN THE MILKY WAY",
+  "Odkryte planety innych gwiazd. Wybierz układ, aby odwiedzić jego światy.": "Discovered planets around other stars. Choose a system to explore its worlds.",
+  "Obserwacje i wizualizacja": "Observations and visualization",
+  "Nowe układy mają osobne zegary. Reset przywraca wybrany układ do dnia 0; domyślne tempo egzoplanet to 0,25 dnia/s. Ich wygląd jest interpretacją artystyczną, a obrót osiowy pozostaje nieruchomy, gdy nie znamy jego okresu.": "Each system has its own clock. Reset restores the selected system to day 0; exoplanets default to 0.25 days/s. Their appearance is an artistic interpretation, and axial rotation is held fixed when its period is unknown.",
   "Widok Drogi Mlecznej pokazuje przybliżone położenie Układu Słonecznego. Galaktyka ma osobną skalę i jest statyczną rekonstrukcją; podczas jej oglądania czas symulacji planet jest zachowany.":
     "The Milky Way view marks the approximate location of our Solar System. The galaxy uses its own scale and is a static reconstruction; your planetary simulation time is preserved while you explore it.",
   "Przygotowywanie mapy galaktyki…": "Preparing the galactic map…",
@@ -138,8 +153,8 @@ export const english = {
   "O ATLASIE": "ABOUT THE ATLAS",
   "Zamknij opis atlasu": "Close atlas description",
   "Przestrzeń do odkrywania.": "A space for discovery.",
-  "Orbita to interaktywny atlas Słońca i ośmiu planet. Obracaj widok przeciągnięciem, przybliżaj kółkiem lub gestem dwóch palców. Na klawiaturze wybieraj obiekty tabulatorem i Enterem. Spacja wstrzymuje czas, Escape przywraca cały układ.":
-    "Orbita is an interactive atlas of the Sun and eight planets. Drag to orbit, and zoom with the scroll wheel or a two-finger gesture. Use Tab and Enter to choose objects with your keyboard. Space pauses time; Escape returns to the whole system.",
+  "Orbita to interaktywny atlas Układu Słonecznego, egzoplanet i Drogi Mlecznej. Obracaj widok przeciągnięciem, przybliżaj kółkiem lub gestem dwóch palców. Na klawiaturze wybieraj obiekty tabulatorem i Enterem. Spacja wstrzymuje czas, Escape przywraca cały układ.":
+    "Orbita is an interactive atlas of the Solar System, exoplanets and the Milky Way. Drag to orbit, and zoom with the scroll wheel or a two-finger gesture. Use Tab and Enter to choose objects with your keyboard. Space pauses time; Escape returns to the whole system.",
   "To symulacja poglądowa, bez efemeryd. Pozycje początkowe są umowne. Orbity są kołowe i współpłaszczyznowe; rozmiary i odległości nie zachowują wspólnej skali. Względne okresy obiegu odpowiadają danym NASA, a obroty osiowe są wizualnie spowolnione.":
     "This is an illustrative simulation without ephemerides. Starting positions are arbitrary. Orbits are circular and lie in one plane; sizes and distances do not share a common scale. Relative orbital periods follow NASA data, while axial rotation is visually slowed down.",
   "Reset przywraca dzień 0, tempo 8 dni/s i cały układ. Przy ograniczonym ruchu czas jest domyślnie wstrzymany; możesz świadomie wznowić symulację przyciskiem odtwarzania. Przeloty i animacje dekoracyjne pozostają wyłączone.":

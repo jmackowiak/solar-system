@@ -19,7 +19,7 @@ test("defaults to English even for a Polish browser and persists an explicit lan
   await expect(page).toHaveTitle("Orbita — Solar System and Milky Way in 3D");
   await expect(page.locator('meta[name="description"]')).toHaveAttribute(
     "content",
-    /Solar System and Milky Way/,
+    /Solar System, TRAPPIST-1.*Milky Way/,
   );
   await picker(page).selectOption("pl");
   await expect(page.locator("html")).toHaveAttribute("lang", "pl");

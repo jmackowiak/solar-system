@@ -5,8 +5,8 @@ export interface Simulation {
   speed: number;
   paused: boolean;
 }
-export function initialSimulation(reduced = false): Simulation {
-  return { days: 0, speed: DEFAULT_SPEED, paused: reduced };
+export function initialSimulation(reduced = false, speed = DEFAULT_SPEED): Simulation {
+  return { days: 0, speed, paused: reduced };
 }
 export function advance(sim: Simulation, seconds: number): Simulation {
   if (!Number.isFinite(seconds) || seconds < 0)
@@ -29,7 +29,7 @@ export type SimulationAction =
   | { type: "pause" }
   | { type: "resume" }
   | { type: "speed"; value: number }
-  | { type: "reset"; reduced?: boolean };
+  | { type: "reset"; reduced?: boolean; speed?: number };
 export function control(sim: Simulation, action: SimulationAction): Simulation {
   switch (action.type) {
     case "pause":
@@ -45,6 +45,6 @@ export function control(sim: Simulation, action: SimulationAction): Simulation {
         throw new RangeError("Szybkość poza zakresem");
       return { ...sim, speed: action.value };
     case "reset":
-      return initialSimulation(action.reduced);
+      return initialSimulation(action.reduced, action.speed);
   }
 }

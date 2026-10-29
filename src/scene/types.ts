@@ -1,11 +1,16 @@
 import type { MutableRefObject } from "react";
 import type { Language } from "../i18n";
 import type { Simulation } from "../lib/simulation";
+import type { Body } from "../data/bodies";
+import type { SystemId } from "../data/systems";
 export type ViewMode = "solar" | "galaxy";
 export type Quality = "auto" | "low" | "high";
 export interface SceneProps {
   language: Language;
   mode: ViewMode;
+  systemId: SystemId;
+  bodies: readonly Body[];
+  starColor: string;
   onEnterSolar: () => void;
   simulation: MutableRefObject<Simulation>;
   selected: string | null;

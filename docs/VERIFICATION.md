@@ -202,3 +202,72 @@ powstają lokalnie. To pojedyncze próby lokalne, nie pomiar łącza internetowe
 
 Pomiar galaktyki wykonano przed końcową aktualizacją obrazu Open Graph i jego
 tekstów alternatywnych. Ten obraz nie jest pobierany podczas uruchamiania sceny.
+
+## Trzy układy egzoplanet — 29 października 2026
+
+Dodano TRAPPIST-1 (7 planet), Kepler-90 (8) i TOI-700 (4), wybór układu,
+katalog w panelu galaktyki, osobne zegary/tempo/pauzę oraz opisy EN/PL. Dane,
+niepewności i rozróżnienie pomiarów od wizualizacji opisuje [EXOPLANETS.md](EXOPLANETS.md).
+Nowe układy i Solar System współdzielą kamerę, kontrolki i jeden Canvas.
+Wygląd egzoplanet jest interpretacją artystyczną, a nieznany obrót osiowy
+pozostaje nieruchomy. Dane nie służą do odtwarzania bieżących efemeryd.
+
+Typy, lint i produkcyjny build przeszły; Vitest/RTL **23/23**. Pełny Playwright:
+74 zaplanowane przypadki, **68 zaliczonych, 4 błędy nieaktualnych oczekiwań
+metadanych, 2 celowe pominięcia desktopowych wariantów testów dotykowych**.
+Po dopasowaniu oczekiwań do opisu SEO zawierającego egzoplanety ponowiono
+wszystkie cztery błędne przypadki: **4/4**. Nie pominięto błędów aplikacji.
+Wszystkie 72 właściwe scenariusze mają zatem wynik pozytywny, lecz nie jest
+to wynik jednego ponownego pełnego przebiegu. Testy obejmują między innymi
+rzeczywisty render i wycentrowany kadr każdej z 19 planet, reset tylko bieżącego
+układu, powrót do zachowanego czasu i tempa, szybkie zmiany celu/układu,
+klawiaturę, tłumaczenia, ekrany wąskie i orientację poziomą oraz brak WebGL.
+
+Oglądano obrazy z natywnego renderera na 1440×900 i 390×844. Poprawiono
+pierścień zaznaczenia, mobilny kadr i rozmieszczenie etykiet. Przegląd kodu
+wykrył także oświetlenie egzoplanety względem globalnego początku zamiast
+przesuwanej gwiazdy podczas zmiany skali. Shader pobiera teraz rzeczywiste
+położenie gwiazdy przed renderem materiału. Natywny WebGL po tej poprawce:
+bez błędów shaderów, aplikacji i zasobów podczas pomiaru.
+
+### Pomiar nowych układów
+
+`HEADED=1 node scripts/measure-exoplanets.mjs`, lokalny produkcyjny podgląd na porcie 4174.
+Apple M2, 16 GB RAM, macOS 27.0.1, Chromium 156.0.0.0, ANGLE Metal Renderer:
+Apple M2. Bez throttlingu, DPR 1, nowy kontekst na każdy rozmiar. Auto wybiera
+wysoką jakość przy 1440×900 i niską przy 390×844. Ten drugi pomiar wykonano
+na tym samym Macu z emulacją rozmiaru i dotyku; **nie na fizycznym telefonie**.
+
+| Układ | Widok ogólny FPS / P95 | Przelot FPS / P95 | Zbliżenie FPS / P95 |
+| --- | ---: | ---: | ---: |
+| TRAPPIST-1 · 1440×900 | 60,14 / 18,1 ms | 60,57 / 18,0 ms | 60,08 / 17,9 ms |
+| Kepler-90 · 1440×900 | 60,05 / 18,2 ms | 60,20 / 18,1 ms | 60,16 / 17,9 ms |
+| TOI-700 · 1440×900 | 60,10 / 17,8 ms | 60,19 / 17,8 ms | 60,13 / 17,5 ms |
+| TRAPPIST-1 · 390×844 (emulacja) | 60,14 / 17,8 ms | 59,73 / 17,7 ms | 60,16 / 17,6 ms |
+| Kepler-90 · 390×844 (emulacja) | 60,06 / 17,9 ms | 60,25 / 17,9 ms | 60,10 / 18,3 ms |
+| TOI-700 · 390×844 (emulacja) | 60,11 / 17,6 ms | 60,24 / 18,1 ms | 60,15 / 18,1 ms |
+
+Widok ogólny i zbliżenie: pojedyncze próbki po 3 s; przelot około 1,62–1,64 s.
+Mediana 16,7 ms. Najdłuższa klatka 33,4 ms wystąpiła przy mobilnym przelocie
+TRAPPIST-1 w emulacji. Drobne wartości ponad 60 FPS wynikają z granic próbkowania
+na ekranie 60 Hz. Są to dostarczone klatki sceny, nie wynik Lighthouse ani pomiar
+samego shadera. Dłuższa praca termiczna i fizyczne urządzenia mobilne pozostają
+niezweryfikowane.
+
+Po pauzie czas pozostał bez zmian przez 120 odświeżeń przeglądarki. Desktop
+zarejestrował jeszcze 1 dodatkową klatkę po zatrzymaniu, emulacja 0; nie utrzymywała
+się ciągła pętla renderowania. Widok ogólny: 16–28 draw calls; bez dodatkowego
+transferu map powierzchni egzoplanet.
+
+Pierwsza użyteczna scena planet: **536,0 ms / 505,8 ms**, **785 430 B ≈ 0,79 MB**
+transferu przed gotowością. Pomiar wykonano przed ostatnią, niewielką zmianą
+samego CSS przycinającą etykiety nad mobilnym wstępem; kod sceny GPU jest
+identyczny. To krótkie, lokalne pomiary, nie pomiar szybkości publicznego łącza.
+Surowe wyniki lokalne: `artifacts/exoplanet-performance.json` (ignorowane przez Git).
+
+Po końcowej poprawce położenia źródła światła i mobilnego CSS przebudowano
+aplikację i uruchomiono ponownie zestaw obejmujący nowe układy, galaktykę oraz
+SEO: **32/32**, bez pominięć, w 2,6 min. Obejmuje obie konfiguracje ekranu i każdy
+z 19 wariantów powierzchni. Nie wystąpiły nieoczekiwane błędy aplikacji, shaderów
+lub zasobów. Ta regresja dotyczy końcowego builda; wcześniejszy pełny przebieg
+został opisany osobno powyżej.

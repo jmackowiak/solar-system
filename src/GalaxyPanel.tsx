@@ -3,14 +3,18 @@ import type { Language } from "./i18n";
 import { translate } from "./i18n";
 import { galaxyCopy } from "./data/galaxy";
 import Icon from "./Icon";
+import { planetarySystems } from "./data/systems";
+import type { SystemId } from "./data/systems";
 export default function GalaxyPanel({
   language,
   onEnter,
+  onSystem,
   collapsed,
   onCollapse,
 }: {
   language: Language;
   onEnter: () => void;
+  onSystem: (id: SystemId) => void;
   collapsed: boolean;
   onCollapse: () => void;
 }) {
@@ -49,6 +53,15 @@ export default function GalaxyPanel({
           {t("Wejdź do Układu Słonecznego")}
           <Icon name="arrow" />
         </button>
+        <div className="galaxy-systems">
+          <span className="eyebrow">{t("UKŁADY W DRODZE MLECZNEJ")}</span>
+          <p>{t("Odkryte planety innych gwiazd. Wybierz układ, aby odwiedzić jego światy.")}</p>
+          {planetarySystems.filter((system) => system.id !== "solar").map((system) => <button key={system.id} aria-label={system.name} onClick={() => onSystem(system.id)}>
+            <span className="system-star" style={{ background: system.starColor }} />
+            <span><strong>{system.name}</strong><small>{Math.round(system.distanceLightYears).toLocaleString(language === "en" ? "en-GB" : "pl-PL")} {t("lat świetlnych od nas")}</small></span>
+            <Icon name="arrow" size={15} />
+          </button>)}
+        </div>
         <dl>
           <div>
             <dt>{t("ODLEGŁOŚĆ OD CENTRUM")}</dt>

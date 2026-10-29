@@ -1,10 +1,9 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Html } from "@react-three/drei";
+import { Billboard, Html } from "@react-three/drei";
 import { OrbitControls as Controls } from "three/addons/controls/OrbitControls.js";
 import * as THREE from "three";
-import { bodies } from "../data/bodies";
-import { englishBodyCopy } from "../data/body-translations";
+import ExoplanetSurface from "./ExoplanetSurface";
 import { translate } from "../i18n";
 import type { Body } from "../data/bodies";
 import { orbitalPosition } from "../lib/simulation";
@@ -22,6 +21,8 @@ const vertex = `varying vec2 vUv; varying vec3 vNormal; varying vec3 vView;
 void main(){vUv=uv; vec4 p=modelViewMatrix*vec4(position,1.);vNormal=normalize(normalMatrix*normal);vView=-p.xyz;gl_Position=projectionMatrix*p;}`;
 const sunFragment = `
 uniform float time;
+uniform vec3 starTint;
+uniform float tintAmount;
 varying vec2 vUv;
 varying vec3 vNormal;
 varying vec3 vView;
@@ -37,6 +38,7 @@ void main(){
  float cells=smoothstep(.1,.9,granules)*.6+field*.4;
  float limb=pow(max(dot(normalize(vNormal),normalize(vView)),0.),.35);
  vec3 c=mix(vec3(.9,.15,.008),vec3(1.,.57,.12),cells)*(.55+limb*.6);
+ c=mix(c,starTint*(.55+cells*.8)*(.55+limb*.6),tintAmount);
  gl_FragColor=vec4(c*1.5,1.);
  #include <tonemapping_fragment>
  #include <colorspace_fragment>
@@ -50,11 +52,13 @@ function Planet({
   props,
   high,
   portal,
+  host,
 }: {
   body: Body;
   props: SceneProps;
   high: boolean;
   portal: React.RefObject<HTMLDivElement | null>;
+  host: React.RefObject<THREE.Group | null>;
 }) {
   const group = useRef<THREE.Group>(null),
     surface = useRef<THREE.Mesh>(null),
@@ -91,16 +95,16 @@ function Planet({
           if (!cancelled) props.onTexture(false);
         },
       );
-    if (body.id !== "sun") load(`/textures/${body.id}-low.webp`, "low");
+    if (props.systemId === "solar" && body.id !== "sun") load(`/textures/${body.id}-low.webp`, "low");
     return () => {
       cancelled = true;
       owned.forEach((t) => t.dispose());
     };
     // Callbacks are stable. Version explicitly retries failed requests.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [body.id, props.textureVersion, invalidate]);
+  }, [body.id, props.systemId, props.textureVersion, invalidate]);
   useEffect(() => {
-    if (props.selected !== body.id || body.id === "sun") return;
+    if (props.systemId !== "solar" || props.selected !== body.id || body.id === "sun") return;
     let cancelled = false;
     const owned: THREE.Texture[] = [];
     const loader = new THREE.TextureLoader();
@@ -142,7 +146,7 @@ function Planet({
       setMaps((s) => ({ ...s, high: undefined, cloud: undefined }));
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [high, props.selected, body.id, props.textureVersion, invalidate]);
+  }, [high, props.selected, props.systemId, body.id, props.textureVersion, invalidate]);
   useFrame(() => {
     if (props.mode !== "solar" || !group.current) return;
     group.current.position.set(
@@ -150,16 +154,16 @@ function Planet({
     );
     const days = props.simulation.current.days;
     // Axial rotation uses a compressed visual rate; retrograde sign is preserved.
-    if (surface.current)
+    if (surface.current && body.rotationPeriodDays !== 0)
       surface.current.rotation.y =
         ((days * 0.12) / Math.sqrt(Math.abs(body.rotationPeriodDays))) *
         Math.sign(body.rotationPeriodDays);
     if (clouds.current) clouds.current.rotation.y = days * 0.14;
     if (sun.current && !props.reduced) sun.current.uniforms.time.value = days;
   });
-  const sunUniforms = useMemo(() => ({ time: { value: 0 } }), []);
+  const sunUniforms = useMemo(() => ({ time: { value: 0 }, starTint: { value: new THREE.Color(props.starColor) }, tintAmount: { value: props.systemId === "solar" ? 0 : 0.8 } }), [props.starColor, props.systemId]);
   const r = body.displayRadius;
-  const isSun = body.id === "sun";
+  const isSun = body.orbitRadius === 0;
   const map = maps.high || maps.low;
   const segments = high ? 64 : 32;
   return (
@@ -186,7 +190,7 @@ function Planet({
             fragmentShader={sunFragment}
             uniforms={sunUniforms}
           />
-        ) : (
+        ) : props.systemId !== "solar" ? <ExoplanetSurface body={body} high={high} host={host} /> : (
           <meshStandardMaterial
             key={map?.uuid || "untextured"}
             map={map}
@@ -239,15 +243,16 @@ function Planet({
         </group>
       )}
       {props.selected === body.id && (
-        <mesh rotation-x={-Math.PI / 2}>
-          <ringGeometry args={[r * 1.27, r * 1.29, 80]} />
+        <Billboard><mesh>
+          <ringGeometry args={[r * 1.22, r * 1.226, 80]} />
           <meshBasicMaterial
             color="#e5be8e"
             transparent
-            opacity={0.6}
+            opacity={0.32}
+            depthWrite={false}
             side={THREE.DoubleSide}
           />
-        </mesh>
+        </mesh></Billboard>
       )}
       {props.mode === "solar" && props.labels && (
         <Html
@@ -262,9 +267,7 @@ function Planet({
             className={`planet-label ${props.selected === body.id ? "active" : ""}`}
             onClick={() => props.onSelect(body.id)}
           >
-            {props.language === "en"
-              ? englishBodyCopy[body.id].name
-              : body.name}
+            {body.name}
             <span />
           </button>
         </Html>
@@ -317,7 +320,7 @@ function Orbit({ body, selected }: { body: Body; selected: boolean }) {
         ),
         new THREE.LineBasicMaterial({ transparent: true }),
       ),
-    [body],
+    [body.orbitRadius],
   );
   useEffect(
     () => () => {
@@ -330,7 +333,7 @@ function Orbit({ body, selected }: { body: Body; selected: boolean }) {
   line.material.opacity = selected ? 0.6 : 0.21;
   return <primitive object={line} />;
 }
-function Particles({ high }: { high: boolean }) {
+function Particles({ high, asteroidBelt }: { high: boolean; asteroidBelt: boolean }) {
   const [stars, asteroids] = useMemo(() => {
     let seed = 420;
     const rnd = () => {
@@ -371,7 +374,7 @@ function Particles({ high }: { high: boolean }) {
           depthWrite={false}
         />
       </points>
-      <points>
+      {asteroidBelt && <points>
         <bufferGeometry drawRange={{ start: 0, count: high ? 1200 : 500 }}>
           <bufferAttribute attach="attributes-position" args={[asteroids, 3]} />
         </bufferGeometry>
@@ -382,7 +385,7 @@ function Particles({ high }: { high: boolean }) {
           opacity={0.5}
           sizeAttenuation
         />
-      </points>
+      </points>}
     </>
   );
 }
@@ -395,6 +398,7 @@ function Engine({
   high: boolean;
   worlds: Worlds;
 }) {
+  const bodies = props.bodies;
   const controls = useRef<Controls>(null);
   const { camera, invalidate, gl, size, setDpr, scene } = useThree();
   const clockState = useRef(props.simulation.current);
@@ -412,7 +416,7 @@ function Engine({
       mode: props.mode,
       radius: bodies.find((b) => b.id === props.selected)?.displayRadius,
     };
-  }, [props.mode, props.selected]);
+  }, [props.mode, props.selected, bodies]);
   const onFailure = props.onFailure;
   const started = useRef(false);
   const flight = useRef<{
@@ -644,7 +648,7 @@ function Engine({
       const r = selected?.displayRadius || 0;
       if (selected) {
         const angle = Math.atan2(temp.pos.z, temp.pos.x) + 2.4;
-        const d = r * (selected.id === "saturn" ? 8 : 6.5);
+        const d = r * (selected.id === "saturn" ? 8 : size.width < 700 ? 7.5 : 6.5);
         temp.dest.set(
           temp.pos.x + Math.cos(angle) * d,
           temp.pos.y + r * 2.3,
@@ -757,6 +761,7 @@ function Engine({
   return null;
 }
 export default function SolarScene(props: SceneProps) {
+  const bodies = props.bodies;
   const portal = useRef<HTMLDivElement>(null);
   const solarWorld = useRef<THREE.Group>(null),
     galaxyWorld = useRef<THREE.Group>(null),
@@ -798,7 +803,7 @@ export default function SolarScene(props: SceneProps) {
             ? props.language === "en"
               ? "Interactive 3D Milky Way"
               : "Interaktywna Droga Mleczna 3D"
-            : translate(props.language, "Interaktywny Układ Słoneczny 3D")
+            : props.systemId === "solar" ? translate(props.language, "Interaktywny Układ Słoneczny 3D") : `${props.systemId} · ${props.language === "en" ? "interactive planetary system in 3D" : "interaktywny układ planetarny 3D"}`
         }
         onCreated={(state) => {
           invalidateGal.current = state.invalidate;
@@ -831,12 +836,12 @@ export default function SolarScene(props: SceneProps) {
         <group ref={solarWorld}>
           <pointLight
             position={[0, 0, 0]}
-            color="#fff2df"
+            color={props.starColor}
             intensity={3.2}
             decay={0}
           />
 
-          <Particles high={high} />
+          <Particles high={high} asteroidBelt={props.systemId === "solar"} />
           {props.orbits &&
             bodies
               .slice(1)
@@ -854,6 +859,7 @@ export default function SolarScene(props: SceneProps) {
               props={props}
               high={high}
               portal={portal}
+              host={solarWorld}
             />
           ))}
         </group>

@@ -9,8 +9,10 @@ import {
   useState,
 } from "react";
 import type { ReactNode } from "react";
-import { bodies as physicalBodies } from "./data/bodies";
-import { englishBodyCopy, englishTourStops } from "./data/body-translations";
+import { getSystemBodies, planetarySystems, systemById } from "./data/systems";
+import type { SystemId } from "./data/systems";
+import type { Simulation } from "./lib/simulation";
+import { englishTourStops } from "./data/body-translations";
 import { useLanguage } from "./i18n";
 import type { Language } from "./i18n";
 import { control, initialSimulation } from "./lib/simulation";
@@ -75,19 +77,19 @@ class SceneBoundary extends Component<
 }
 export default function App() {
   const { language, setLanguage, t } = useLanguage();
-  const bodies = useMemo(
-    () =>
-      physicalBodies.map((body) =>
-        language === "en" ? { ...body, ...englishBodyCopy[body.id] } : body,
-      ),
-    [language],
-  );
+  const [systemId, setSystemId] = useState<SystemId>("solar");
+  const bodies = useMemo(() => getSystemBodies(systemId, language), [systemId, language]);
+  const system = systemById[systemId];
+  const systemCopy = system.copy[language];
+  const isSolar = systemId === "solar";
+  const initialSpeed = isSolar ? 8 : 0.25;
   const [mode, setMode] = useState<ViewMode>("solar");
   const stops = language === "en" ? englishTourStops : polishStops;
   const [reduced, setReduced] = useState(
     () => matchMedia("(prefers-reduced-motion: reduce)").matches,
   );
   const simulation = useRef(initialSimulation(reduced));
+  const savedSimulations = useRef<Partial<Record<SystemId, Simulation>>>({});
   const [paused, setPaused] = useState(reduced),
     [speed, setSpeed] = useState(8),
     [days, setDays] = useState(0);
@@ -107,12 +109,32 @@ export default function App() {
     [loaded, setLoaded] = useState(0),
     [textureVersion, setTextureVersion] = useState(0),
     [hidden, setHidden] = useState(document.hidden);
+  const systemPicker = useRef<HTMLSelectElement>(null);
   const panel = useRef<HTMLHeadingElement>(null),
     lastTrigger = useRef<HTMLElement | null>(null),
     settingsButton = useRef<HTMLButtonElement>(null),
     aboutButton = useRef<HTMLButtonElement>(null),
     aboutDialog = useRef<HTMLDialogElement>(null);
   const body = bodies.find((b) => b.id === selected);
+  const changeSystem = useCallback((next: SystemId) => {
+    systemPicker.current?.focus({ preventScroll: true });
+    if (next !== systemId) {
+      savedSimulations.current[systemId] = simulation.current;
+      const restored = savedSimulations.current[next] || initialSimulation(reduced, next === "solar" ? 8 : 0.25);
+      simulation.current = restored;
+      setDays(simulation.current.days);
+      setSpeed(simulation.current.speed);
+      setPaused(simulation.current.paused);
+      setSystemId(next);
+    }
+    if (!fallback) setReady(false);
+    setMode("solar");
+    setSelected(null);
+    setTour(null);
+    setSettings(false);
+    setCollapsed(false);
+    setNavigation((n) => n + 1);
+  }, [systemId, reduced, fallback]);
   useEffect(() => {
     let last = performance.now();
     const id = setInterval(() => {
@@ -124,7 +146,7 @@ export default function App() {
       setDays(simulation.current.days);
     }, 200);
     return () => clearInterval(id);
-  }, [fallback, hidden, mode]);
+  }, [fallback, hidden, mode, systemId]);
   useEffect(() => {
     const onVisibility = () => setHidden(document.hidden);
     document.addEventListener("visibilitychange", onVisibility);
@@ -136,6 +158,7 @@ export default function App() {
       setReduced(m.matches);
       if (m.matches) {
         simulation.current = control(simulation.current, { type: "pause" });
+        for (const saved of Object.values(savedSimulations.current)) saved.paused = true;
         setPaused(true);
       }
     };
@@ -216,6 +239,7 @@ export default function App() {
     setReduced(r);
     if (r) {
       simulation.current = control(simulation.current, { type: "pause" });
+      for (const saved of Object.values(savedSimulations.current)) saved.paused = true;
       setPaused(true);
     }
   };
@@ -228,18 +252,11 @@ export default function App() {
     setCollapsed(false);
     setNavigation((n) => n + 1);
   };
-  const enterSolar = useCallback(() => {
-    if (!fallback) setReady(false);
-    setMode("solar");
-    setSelected(null);
-    setTour(null);
-    setCollapsed(false);
-    setNavigation((n) => n + 1);
-  }, [fallback]);
+  const enterSolar = useCallback(() => changeSystem("solar"), [changeSystem]);
   const reset = () => {
-    simulation.current = initialSimulation(reduced);
+    simulation.current = initialSimulation(reduced, initialSpeed);
     setDays(0);
-    setSpeed(8);
+    setSpeed(initialSpeed);
     setPaused(reduced);
     home();
   };
@@ -253,13 +270,14 @@ export default function App() {
     }).format(n);
   return (
     <main
-      className={`app ${body || mode === "galaxy" ? "has-selection" : ""} ${mode === "galaxy" ? "galaxy-mode" : "solar-mode"} ${reduced ? "reduced" : ""}`}
+      className={`app ${body || mode === "galaxy" ? "has-selection" : ""} ${mode === "galaxy" ? "galaxy-mode" : "solar-mode"} ${!isSolar ? "exoplanet-mode" : ""} ${reduced ? "reduced" : ""}`}
     >
       <div
         className="space"
         data-testid="scene"
         data-ready={ready ? "true" : "false"}
         data-mode={mode}
+        data-system={systemId}
         data-target={mode === "galaxy" ? "galaxy" : selected || "overview"}
         data-flight="false"
         data-frames="0"
@@ -277,6 +295,9 @@ export default function App() {
             >
               <SolarScene
                 mode={mode}
+                systemId={systemId}
+                bodies={bodies}
+                starColor={system.starColor}
                 onEnterSolar={enterSolar}
                 language={language}
                 simulation={simulation}
@@ -350,7 +371,7 @@ export default function App() {
             <small>
               {mode === "galaxy"
                 ? t("ATLAS DROGI MLECZNEJ")
-                : t("ATLAS UKŁADU SŁONECZNEGO")}
+                : isSolar ? t("ATLAS UKŁADU SŁONECZNEGO") : t("ATLAS UKŁADÓW PLANETARNYCH")}
             </small>
           </span>
         </a>
@@ -395,8 +416,8 @@ export default function App() {
       </header>
       <nav className="mode-switch" aria-label={t("Skala eksploracji")}>
         <button
-          aria-pressed={mode === "solar"}
-          onClick={() => switchMode("solar")}
+          aria-pressed={mode === "solar" && isSolar}
+          onClick={enterSolar}
         >
           {t("Układ Słoneczny")}
         </button>
@@ -406,8 +427,14 @@ export default function App() {
         >
           {t("Droga Mleczna")}
         </button>
+        <label className="system-picker">
+          <span className="sr-only">{t("Układ planetarny")}</span>
+          <select ref={systemPicker} aria-label={t("Układ planetarny")} value={systemId} onChange={(e) => changeSystem(e.target.value as SystemId)}>
+            {planetarySystems.map((entry) => <option key={entry.id} value={entry.id}>{entry.id === "solar" ? t("Układ Słoneczny") : entry.name}</option>)}
+          </select>
+        </label>
       </nav>
-      <nav className="object-nav" aria-label={t("Obiekty Układu Słonecznego")}>
+      <nav className="object-nav" aria-label={isSolar ? t("Obiekty Układu Słonecznego") : t("Obiekty układu planetarnego")}>
         <span className="eyebrow nav-heading">{t("ODKRYWAJ")}</span>
         {bodies.map((b, i) => (
           <button
@@ -424,7 +451,7 @@ export default function App() {
               className={`nav-planet ${b.id}`}
               style={{
                 backgroundColor: b.color,
-                backgroundImage: `url(/textures/${b.id}-low.webp)`,
+                backgroundImage: isSolar && b.orbitRadius > 0 ? `url(/textures/${b.id}-low.webp)` : undefined,
               }}
             />
             <span>{b.name}</span>
@@ -437,7 +464,7 @@ export default function App() {
           {t("NIESKOŃCZONA CIEKAWOŚĆ.")}
         </span>
       </nav>
-      {!body && mode === "solar" && (
+      {!body && mode === "solar" && isSolar && (
         <section className="intro">
           <div className="eyebrow">
             <span className="tiny-cross">+</span>{" "}
@@ -466,7 +493,7 @@ export default function App() {
           </button>
         </section>
       )}
-      {!body && mode === "solar" && (
+      {!body && mode === "solar" && isSolar && (
         <aside className="overview-note">
           <span className="eyebrow">{t("UKŁAD SŁONECZNY")}</span>
           <p>
@@ -480,6 +507,22 @@ export default function App() {
             {t("Resztą zajmie się grawitacja.")}
           </span>
         </aside>
+      )}
+      {!body && mode === "solar" && !isSolar && (
+        <section className="intro system-intro" aria-label={system.name}>
+          <div className="eyebrow">{t("ZA GRANICĄ NASZEGO UKŁADU")}</div>
+          <h1>{system.name}</h1>
+          <span className="system-subtitle">{systemCopy.subtitle}</span>
+          <p>{systemCopy.description}</p>
+          <button className="journey-button" onClick={() => select(bodies[1].id)}>
+            {t("Odkrywaj planety")} <Icon name="arrow" />
+          </button>
+          <div className="system-evidence">
+            <span>{bodies.length - 1} {t("potwierdzonych planet")}</span><span>·</span>
+            <span>{format(system.distanceLightYears)} {t("lat świetlnych od nas")}</span>
+          </div>
+          <p className="artistic-notice">{t("Wygląd planet jest wizualizacją artystyczną.")}</p>
+        </section>
       )}
       <div className="scene-tools">
         <button
@@ -560,6 +603,7 @@ export default function App() {
         <GalaxyPanel
           language={language}
           onEnter={enterSolar}
+          onSystem={changeSystem}
           collapsed={collapsed}
           onCollapse={() => setCollapsed((v) => !v)}
         />
@@ -574,7 +618,7 @@ export default function App() {
             <span className="eyebrow">
               {tour !== null
                 ? `${t("PODRÓŻ")} · ${String(tour + 1).padStart(2, "0")} / 05`
-                : `${t("KATALOG")} · ${String(bodies.indexOf(body)).padStart(2, "0")} / 08`}
+                : `${t("KATALOG")} · ${String(bodies.indexOf(body)).padStart(2, "0")} / ${String(bodies.length - 1).padStart(2, "0")}`}
             </span>
             <div className="panel-actions">
               <button
@@ -603,16 +647,17 @@ export default function App() {
           </h2>
           <div className="panel-content">
             <p className="description">{body.description}</p>
+            {!isSolar && <p className="artistic-notice">{t("Wygląd planet jest wizualizacją artystyczną.")}</p>}
             <dl>
               <div>
-                <dt>{t("ŚREDNIA ŚREDNICA")}</dt>
+                <dt>{isSolar ? t("ŚREDNIA ŚREDNICA") : t("SZACOWANA ŚREDNICA")}</dt>
                 <dd>
                   {format(body.diameterKm)} <span>km</span>
                 </dd>
               </div>
               {body.distanceMillionKm !== null && (
                 <div>
-                  <dt>{t("ODLEGŁOŚĆ OD SŁOŃCA · ŚREDNIA")}</dt>
+                  <dt>{isSolar ? t("ODLEGŁOŚĆ OD SŁOŃCA · ŚREDNIA") : t("ODLEGŁOŚĆ OD GWIAZDY")}</dt>
                   <dd>
                     {format(body.distanceMillionKm)} <span>{t("mln km")}</span>
                   </dd>
@@ -690,12 +735,12 @@ export default function App() {
                   </button>
                 )}
               </div>
-            ) : (
+            ) : isSolar ? (
               <button className="panel-journey" onClick={() => step(0)}>
                 {t("Rozpocznij podróż")}
                 <Icon name="arrow" />
               </button>
-            )}
+            ) : <button className="panel-journey" onClick={home}>{t("Cały układ")} <Icon name="home" /></button>}
           </div>
         </section>
       )}
@@ -750,7 +795,7 @@ export default function App() {
               <div>
                 <label htmlFor="speed">{t("TEMPO PODRÓŻY")}</label>
                 <output>
-                  {speed} <span>{t("dni / s")}</span>
+                  {format(speed)} <span>{t("dni / s")}</span>
                 </output>
               </div>
               <input
@@ -758,8 +803,8 @@ export default function App() {
                 aria-label={t("Szybkość symulacji")}
                 type="range"
                 min="0"
-                max="100"
-                step="1"
+                max={isSolar ? 100 : 5}
+                step={isSolar ? 1 : 0.05}
                 value={speed}
                 onChange={(e) => {
                   const value = Number(e.target.value);
@@ -774,7 +819,7 @@ export default function App() {
             <button
               className="round-button reset"
               aria-label={t("Resetuj symulację")}
-              title={t("Reset: dzień 0, 8 dni/s, widok całego układu")}
+              title={isSolar ? t("Reset: dzień 0, 8 dni/s, widok całego układu") : t("Reset: dzień 0, 0,25 dnia/s, widok całego układu")}
               onClick={reset}
             >
               <Icon name="reset" />
@@ -789,7 +834,7 @@ export default function App() {
                 "Widok poglądowy — rozmiary i odległości nie zachowują wspólnej skali",
               )}
             </span>
-            <span className="coordinates">SOL / 01</span>
+            <span className="coordinates">{isSolar ? "SOL / 01" : system.name.toUpperCase()}</span>
           </div>
         </footer>
       )}
@@ -841,9 +886,10 @@ export default function App() {
           </button>
         </div>
         <h2>{t("Przestrzeń do odkrywania.")}</h2>
+        <p>{t("Nowe układy mają osobne zegary. Reset przywraca wybrany układ do dnia 0; domyślne tempo egzoplanet to 0,25 dnia/s. Ich wygląd jest interpretacją artystyczną, a obrót osiowy pozostaje nieruchomy, gdy nie znamy jego okresu.")}</p>
         <p>
           {t(
-            "Orbita to interaktywny atlas Słońca i ośmiu planet. Obracaj widok przeciągnięciem, przybliżaj kółkiem lub gestem dwóch palców. Na klawiaturze wybieraj obiekty tabulatorem i Enterem. Spacja wstrzymuje czas, Escape przywraca cały układ.",
+            "Orbita to interaktywny atlas Układu Słonecznego, egzoplanet i Drogi Mlecznej. Obracaj widok przeciągnięciem, przybliżaj kółkiem lub gestem dwóch palców. Na klawiaturze wybieraj obiekty tabulatorem i Enterem. Spacja wstrzymuje czas, Escape przywraca cały układ.",
           )}
         </p>
         <p>

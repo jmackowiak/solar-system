@@ -28,6 +28,30 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 describe("accessible 2D atlas", () => {
+  it("keeps the current exoplanet system on reset and restores each system's speed", () => {
+    render(<App />);
+    const picker = screen.getByRole("combobox", { name: "Układ planetarny" });
+    fireEvent.change(picker, { target: { value: "trappist-1" } });
+    expect(screen.getByRole("slider")).toHaveValue("0.25");
+    fireEvent.change(screen.getByRole("slider"), { target: { value: "1.5" } });
+    fireEvent.click(screen.getByRole("button", { name: "Wznów symulację" }));
+    fireEvent.change(picker, { target: { value: "kepler-90" } });
+    expect(screen.getByRole("slider")).toHaveValue("0.25");
+    fireEvent.change(screen.getByRole("slider"), { target: { value: "0.5" } });
+    fireEvent.change(picker, { target: { value: "trappist-1" } });
+    expect(screen.getByRole("slider")).toHaveValue("1.5");
+    expect(screen.getByRole("button", { name: "Wstrzymaj symulację" })).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: "Wybierz TRAPPIST-1 e" }));
+    expect(screen.getByRole("heading", { name: "TRAPPIST-1 e" })).toHaveFocus();
+    fireEvent.click(screen.getByRole("button", { name: "Resetuj symulację" }));
+    expect(picker).toHaveValue("trappist-1");
+    expect(screen.getByRole("slider")).toHaveValue("0.25");
+    expect(screen.queryByRole("region", { name: "Informacje o obiekcie" })).toBeNull();
+    fireEvent.change(picker, { target: { value: "kepler-90" } });
+    expect(screen.getByRole("slider")).toHaveValue("0.5");
+    fireEvent.change(picker, { target: { value: "solar" } });
+    expect(screen.getByRole("slider")).toHaveValue("8");
+  });
   it("keeps astronomical data and focus navigation available without WebGL", () => {
     render(<App />);
     const trigger = screen.getByRole("button", { name: "Wybierz Mars" });

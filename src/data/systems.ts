@@ -635,33 +635,100 @@ const palettes: Record<ExoplanetSystemId, string[]> = {
 const likelyRocky = (id: ExoplanetSystemId, letter: string) =>
   id === "trappist-1" || (id === "kepler-90" ? ["b", "c", "i"].includes(letter) : letter !== "c");
 
-function planetCopy(id: ExoplanetSystemId, measurement: PlanetMeasurement, index: number, language: Language) {
-  const { name } = systemById[id];
-  const numeric = new Intl.NumberFormat(language === "en" ? "en-GB" : "pl-PL", { maximumFractionDigits: 3 });
-  const radius = numeric.format(measurement.radiusEarth);
-  const days = numeric.format(measurement.periodDays);
+/** Individual narratives use the snapshot above; surface conditions are not inferred from size. */
+const planetNarratives: Record<ExoplanetSystemId, Record<string, Record<Language, { description: string; fact: string }>>> = {
+  "trappist-1": {
+    "b": {
+      en: { description: "The closest planet to this tiny red star races around it in just a day and a half. Its slightly larger-than-Earth size opens a very different window onto the family of rocky worlds.", fact: "During one Earth week, this planet completes more than four full orbits." },
+      pl: { description: "Najbliższa planeta tej maleńkiej czerwonej gwiazdy obiega ją w zaledwie półtora dnia. Jest nieco większa od Ziemi i pokazuje, jak odmienna może być rodzina skalistych światów.", fact: "W ciągu jednego ziemskiego tygodnia ta planeta wykonuje ponad cztery pełne obiegi." },
+    },
+    "c": {
+      en: { description: "The second world in the system follows close behind b. Its radius is only about a tenth larger than Earth’s, yet its entire year fits comfortably into a long weekend.", fact: "One orbit of c takes about 1.6 times as long as an orbit of its inner neighbour b." },
+      pl: { description: "Drugi świat układu podąża tuż za planetą b. Jego promień jest tylko o około jedną dziesiątą większy od ziemskiego, a cały rok mieści się w długości długiego weekendu.", fact: "Jeden obieg planety c trwa około 1,6 razy dłużej niż obieg jej wewnętrznej sąsiadki b." },
+    },
+    "d": {
+      en: { description: "One of the smaller members of this crowded family, d is noticeably smaller than Earth. It sits between c and e, completing a circuit of the star in roughly four days.", fact: "Its estimated radius is about 79% of Earth’s; only h has a smaller central radius estimate in this system." },
+      pl: { description: "Jedna z mniejszych planet tej ciasnej rodziny jest wyraźnie mniejsza od Ziemi. Krąży między c i e, zamykając obieg gwiazdy w około cztery dni.", fact: "Jej szacowany promień to około 79% ziemskiego; spośród planet tego układu tylko h ma mniejsze centralne oszacowanie promienia." },
+    },
+    "e": {
+      en: { description: "Close to Earth in size, e lies near the middle of this compact system. It is a compelling world to investigate, but a familiar size alone tells us little about the conditions at its surface.", fact: "Its estimated radius is about 8% smaller than Earth’s. A year here lasts just over six Earth days." },
+      pl: { description: "Rozmiarami bliska Ziemi planeta e leży w środkowej części tego zwartego układu. Zachęca do badań, ale znajoma wielkość niewiele mówi o rzeczywistych warunkach na jej powierzchni.", fact: "Jej szacowany promień jest o około 8% mniejszy od ziemskiego. Rok trwa tu nieco ponad sześć ziemskich dni." },
+    },
+    "f": {
+      en: { description: "Almost Earth-sized, f takes a little over nine days to circle its star. From here outward, the family remains remarkably compact even as the orbital pace begins to ease.", fact: "Its central radius estimate is only about 4.5% larger than Earth’s, while its year is about one and a half times as long as e’s." },
+      pl: { description: "Planeta f, niemal wielkości Ziemi, potrzebuje nieco ponad dziewięciu dni na obieg gwiazdy. Dalej tempo orbitalnej podróży maleje, ale rodzina światów nadal pozostaje wyjątkowo zwarta.", fact: "Jej centralne oszacowanie promienia jest tylko o około 4,5% większe od ziemskiego, a rok trwa około półtora razy dłużej niż na e." },
+    },
+    "g": {
+      en: { description: "The largest planet in this family by its central radius estimate is still only modestly larger than Earth. It occupies the penultimate orbit, between f and the smaller outer world h.", fact: "Its orbital distance is about four times that of b, despite both planets belonging to a system far smaller than Mercury’s orbit." },
+      pl: { description: "Największa planeta tej rodziny według centralnego oszacowania promienia wciąż jest tylko nieznacznie większa od Ziemi. Zajmuje przedostatnią orbitę, między f i mniejszym zewnętrznym światem h.", fact: "Jej odległość orbitalna jest około cztery razy większa niż planety b, choć obie należą do układu znacznie mniejszego od orbity Merkurego." },
+    },
+    "h": {
+      en: { description: "The smallest known member also marks the outer edge of this seven-planet family. Even here, a full journey around the star takes less than nineteen Earth days.", fact: "While h completes one orbit, b makes about twelve and a half. These are orbital years, not measured rotation periods." },
+      pl: { description: "Najmniejsza znana planeta wyznacza zarazem zewnętrzny skraj tej siedmioplanetarnej rodziny. Nawet tutaj pełna podróż wokół gwiazdy trwa krócej niż dziewiętnaście ziemskich dni.", fact: "Gdy h wykonuje jeden obieg, b zdąży okrążyć gwiazdę około dwanaście i pół razy. To lata orbitalne, nie zmierzone okresy obrotu osiowego." },
+    },
+  },
+  "kepler-90": {
+    "b": {
+      en: { description: "The innermost known world in this eight-planet system completes its year in a single Earth week. Larger than Earth but much smaller than the outer giants, it anchors the compact inner family.", fact: "The neighbouring planet c takes only about 1.7 Earth days longer to complete an orbit." },
+      pl: { description: "Najbliższy znany świat tego ośmioplanetarnego układu zamyka swój rok w jednym ziemskim tygodniu. Większy od Ziemi, ale znacznie mniejszy od zewnętrznych olbrzymów, otwiera zwartą rodzinę wewnętrznych planet.", fact: "Sąsiednia planeta c potrzebuje na pełny obieg tylko około 1,7 ziemskiego dnia więcej." },
+    },
+    "c": {
+      en: { description: "Small by this system’s standards, c is the second planet from the star. Its estimated radius is only about a fifth larger than Earth’s, smaller than both its immediate neighbours.", fact: "Being farther from a star does not necessarily mean being larger: c is smaller than the closer planet b." },
+      pl: { description: "Niewielka na tle tego układu planeta c krąży jako druga od gwiazdy. Jej szacowany promień jest tylko o około jedną piątą większy od ziemskiego i mniejszy niż u obu najbliższych sąsiadek.", fact: "Większa odległość od gwiazdy nie musi oznaczać większego rozmiaru: c jest mniejsza od bliższej planety b." },
+    },
+    "i": {
+      en: { description: "A late discovery tucked into an early orbit. This small world circles between c and d, showing why the letters in planet names do not always follow their distance from the star.", fact: "The system’s eighth planet to be discovered was identified in archived Kepler data with machine learning. It is third in orbital order." },
+      pl: { description: "Późno odkryta planeta na jednej z pierwszych orbit. Ten niewielki świat krąży między c i d, pokazując, dlaczego litery w nazwach planet nie zawsze odpowiadają odległościom od gwiazdy.", fact: "Ósmą odkrytą planetę układu rozpoznano w archiwalnych danych Keplera z pomocą uczenia maszynowego. W kolejności orbit jest trzecia." },
+    },
+    "d": {
+      en: { description: "After the tightly packed inner trio comes a larger world with nearly three times Earth’s radius. Its size places it between familiar categories, and its detailed composition remains uncertain.", fact: "A year on d lasts more than four times as long as a year on its inner neighbour i." },
+      pl: { description: "Za ciasną wewnętrzną trójką pojawia się większy świat o promieniu niemal trzykrotnie większym od ziemskiego. Rozmiar stawia go między znanymi kategoriami planet, a szczegółowy skład pozostaje niepewny.", fact: "Rok na d trwa ponad cztery razy dłużej niż rok na wewnętrznej sąsiadce i." },
+    },
+    "e": {
+      en: { description: "The middle planet of the larger inner group circles its star in about ninety-two days. It is slightly smaller than d and f, another reminder that planetary families are not sorted by size.", fact: "For every orbit completed by e, the innermost planet b completes about thirteen." },
+      pl: { description: "Środkowa planeta grupy większych wewnętrznych światów obiega gwiazdę w około dziewięćdziesiąt dwa dni. Jest nieco mniejsza od d i f — kolejne przypomnienie, że planetarne rodziny nie są uporządkowane według rozmiarów.", fact: "Na każdy pełny obieg e przypada około trzynastu obiegów najbliższej gwieździe planety b." },
+    },
+    "f": {
+      en: { description: "The last world before the two outer giants has a radius close to that of d. A much longer orbit sets its rhythm: a year lasts roughly a third of an Earth year.", fact: "Although d and f have almost the same central radius estimate, f takes a little over twice as long to orbit the star." },
+      pl: { description: "Ostatni świat przed parą zewnętrznych olbrzymów ma promień zbliżony do planety d. Rytm wyznacza jednak znacznie dłuższa orbita: rok trwa około jednej trzeciej ziemskiego roku.", fact: "Choć d i f mają niemal takie same centralne oszacowania promienia, f potrzebuje na obieg gwiazdy nieco ponad dwa razy więcej czasu." },
+    },
+    "g": {
+      en: { description: "The inner of the two outer giants is a clear step up in size, with almost eight times Earth’s radius. Its broad orbit takes about two hundred and eleven days to complete.", fact: "Even this outer giant orbits at only about 72% of the Earth–Sun distance." },
+      pl: { description: "Wewnętrzny z dwóch zewnętrznych olbrzymów przynosi wyraźny skok rozmiarów: ma promień niemal osiem razy większy od ziemskiego. Rozległy obieg zamyka w około dwieście jedenaście dni.", fact: "Nawet ten zewnętrzny olbrzym krąży w odległości wynoszącej tylko około 72% odległości Ziemi od Słońca." },
+    },
+    "h": {
+      en: { description: "A roughly Jupiter-sized giant closes the known family. Its orbit reaches nearly the Earth–Sun distance, yet contains an entire eight-planet system inside it.", fact: "The longest year in this system still ends before an Earth year: about 332 days rather than 365." },
+      pl: { description: "Olbrzym o rozmiarach zbliżonych do Jowisza zamyka znaną rodzinę. Jego orbita sięga niemal odległości Ziemi od Słońca, mieszcząc w swoim obrębie cały ośmioplanetarny układ.", fact: "Najdłuższy rok tego układu wciąż kończy się przed ziemskim: trwa około 332 dni zamiast 365." },
+    },
+  },
+  "toi-700": {
+    "b": {
+      en: { description: "The innermost of four known planets is close to Earth in size. Its ten-day year sets the fastest pace in this small family around a cool red dwarf.", fact: "This planet completes almost four orbits in the time the outermost planet d completes one." },
+      pl: { description: "Najbliższa gwieździe z czterech znanych planet ma rozmiary zbliżone do Ziemi. Jej dziesięciodniowy rok wyznacza najszybszy rytm w tej małej rodzinie przy chłodnym czerwonym karle.", fact: "Ta planeta wykonuje niemal cztery obiegi w czasie, w którym zewnętrzna planeta d zamyka jeden." },
+    },
+    "c": {
+      en: { description: "The largest world in the system stands out between its smaller neighbours. NASA classifies it as Neptune-like; a radius more than twice Earth’s sets it apart from the other three planets.", fact: "Its estimated radius is about 2.6 times that of its inner neighbour b." },
+      pl: { description: "Największy świat układu wyraźnie wyróżnia się między mniejszymi sąsiadkami. NASA klasyfikuje go jako planetę typu Neptuna; promień ponad dwukrotnie większy od ziemskiego odróżnia go od pozostałej trójki.", fact: "Jej szacowany promień jest około 2,6 razy większy niż u wewnętrznej sąsiadki b." },
+    },
+    "e": {
+      en: { description: "Announced in 2023, the fourth planet discovered here slipped into the gap between c and d. It is slightly smaller than Earth and lies in the star’s optimistic habitable zone; water has not been confirmed.", fact: "Finding e required an additional year of TESS observations. Its faint transit signal had escaped the first year’s search." },
+      pl: { description: "Ogłoszona w 2023 roku czwarta odkryta planeta układu zajęła miejsce między c i d. Jest nieco mniejsza od Ziemi i leży w optymistycznym obszarze ekosfery gwiazdy; nie potwierdzono na niej wody.", fact: "Odkrycie e wymagało dodatkowego roku obserwacji TESS. Jej słaby sygnał tranzytu umknął poszukiwaniom w pierwszym roku." },
+    },
+    "d": {
+      en: { description: "The outermost known planet brought this system into focus in 2020. Slightly larger than Earth, it orbits in the conservative habitable zone, a promising location for study rather than evidence of a living world.", fact: "Its roughly thirty-seven-day year is longer than those of b, c and e, even though d was discovered before e." },
+      pl: { description: "Najdalsza znana planeta zwróciła uwagę na ten układ w 2020 roku. Nieco większa od Ziemi, krąży w konserwatywnym obszarze ekosfery — obiecującym miejscu do badań, nie dowodzie istnienia żywego świata.", fact: "Jej rok, trwający około trzydziestu siedmiu dni, jest dłuższy niż na b, c i e, choć planetę d odkryto przed e." },
+    },
+  },
+};
+
+function planetCopy(id: ExoplanetSystemId, measurement: PlanetMeasurement, language: Language) {
   const giant = id === "kepler-90" && ["g", "h"].includes(measurement.letter);
   const neptune = id === "toi-700" && measurement.letter === "c";
   const rocky = likelyRocky(id, measurement.letter);
   const kind = language === "en"
     ? giant ? "Gas giant exoplanet" : neptune ? "Neptune-like exoplanet" : rocky ? "Likely rocky exoplanet" : "Exoplanet · composition uncertain"
     : giant ? "Egzoplaneta · gazowy olbrzym" : neptune ? "Egzoplaneta typu Neptuna" : rocky ? "Egzoplaneta · prawdopodobnie skalista" : "Egzoplaneta · niepewny skład";
-  const description = language === "en"
-    ? `World ${index + 1} in order from ${name}. Its measured radius is about ${radius} times Earth’s, and a year here lasts about ${days} Earth days. The colours in this atlas are an artistic interpretation, not a photograph.`
-    : `${index + 1}. świat w kolejności od gwiazdy ${name}. Jego zmierzony promień to około ${radius} promienia Ziemi, a rok trwa tu około ${days} ziemskich dni. Barwy w atlasie są interpretacją artystyczną, nie fotografią.`;
-  let fact = language === "en"
-    ? "A planet’s letter reflects its discovery naming sequence, rather than its distance from the star."
-    : "Litera w nazwie planety odzwierciedla kolejność nadawania nazw podczas odkryć, a nie odległość od gwiazdy.";
-  if (id === "trappist-1") fact = language === "en"
-    ? "All seven known planets in this system orbit closer to their star than Mercury does to our Sun."
-    : "Wszystkie siedem znanych planet tego układu krąży bliżej swojej gwiazdy niż Merkury wokół Słońca.";
-  if (id === "kepler-90" && measurement.letter === "i") fact = language === "en"
-    ? "This eighth discovery in the system was found in archived Kepler observations with the help of machine learning. It is the third planet from the star."
-    : "Tę ósmą odkrytą planetę układu znaleziono w archiwalnych obserwacjach Keplera z pomocą uczenia maszynowego. Jest trzecią planetą od gwiazdy.";
-  if (id === "toi-700" && ["e", "d"].includes(measurement.letter)) fact = language === "en"
-    ? "An orbit in a habitable-zone region does not establish the presence of water or life. Conditions depend on properties such as the planet’s atmosphere."
-    : "Orbita w obszarze ekosfery nie potwierdza istnienia wody ani życia. Warunki zależą między innymi od atmosfery planety.";
-  return { kind, description, fact };
+  return { kind, ...planetNarratives[id][measurement.letter][language] };
 }
 
 /** Every return value is independent; changing UI copy must not mutate the scientific snapshot. */
@@ -695,7 +762,7 @@ export function getSystemBodies(id: SystemId, language: Language): Body[] {
   };
   return [star, ...measurements.map((planet, index): Body => ({
     id: `${id}-${planet.letter}`, name: `${system.name} ${planet.letter}`,
-    ...planetCopy(id, planet, index, language),
+    ...planetCopy(id, planet, language),
     diameterKm: Math.round(planet.radiusEarth * EARTH_RADIUS_KM * 2),
     // Semi-major axis, an orbital distance proxy; see docs/EXOPLANETS.md.
     distanceMillionKm: planet.semiMajorAu * AU_MILLION_KM,

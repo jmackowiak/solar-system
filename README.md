@@ -2,7 +2,7 @@
 
 **Wersja produkcyjna: https://solar-system-six-opal.vercel.app**
 
-Interaktywny atlas Układu Słonecznego w 3D, po angielsku i po polsku. React 19, TypeScript, Vite 8,
+Interaktywny atlas Układu Słonecznego, egzoplanet i Drogi Mlecznej w 3D, po angielsku i po polsku. React 19, TypeScript, Vite 8,
 Three.js r186, React Three Fiber 9 i Drei 10. Bez backendu i runtime CDN.
 
 ## Uruchomienie
@@ -174,3 +174,35 @@ HEADED=1 node scripts/measure-galaxy.mjs
 
 Skrypt mierzy obrót i przejścia, a w spoczynku sprawdza brak zbędnych klatek.
 Emulacja 390×844 na komputerze nie potwierdza wydajności fizycznego telefonu.
+
+## Układy innych gwiazd
+
+Przełącznik **Planetary system / Układ planetarny** obok skali eksploracji pozwala
+wybrać Układ Słoneczny, **TRAPPIST-1** (7 potwierdzonych planet), **Kepler-90** (8)
+lub **TOI-700** (4). W panelu Drogi Mlecznej znajduje się również katalog tych
+układów z odległościami od nas. Scena, wybór obiektu, przeloty, jakość, etykiety,
+orbity i wariant 2D obejmują wszystkie cztery układy i współdzielą jeden Canvas.
+
+Każdy układ ma osobny zegar, tempo i pauzę, zachowane do powrotu w tej samej sesji.
+Egzoplanety startują z tempem **0,25 dnia/s**, z zakresem 0–5 i krokiem 0,05;
+Układ Słoneczny zachowuje 8 dni/s i zakres 0–100. Reset dotyczy bieżącego układu:
+dzień 0, jego domyślne tempo, widok ogólny. Wycieczka z przewodnikiem pozostaje
+wycieczką po Układzie Słonecznym. Znacznik „You are here” zawsze prowadzi do niego.
+
+Promienie, okresy obiegu, półosie wielkie i położenia gwiazd pochodzą z lokalnej
+migawki NASA Exoplanet Archive z 29 października 2026. Zachowano niepewności i
+odnośniki do publikacji w `src/data/systems.ts`. [Opis źródeł i uproszczeń](docs/EXOPLANETS.md).
+Powierzchnie to własne proceduralne interpretacje artystyczne; nie przedstawiają
+zmierzonych map, oceanów ani znanego składu atmosfer. Nieznany obrót osiowy jest
+nieruchomy. Obserwowane okresy obiegu są zachowane, a orbity i skala uproszczone.
+
+```sh
+npx playwright test tests/exoplanets.spec.ts
+```
+
+Pomiary nowych układów na natywnym GPU (warunki i ograniczenia w `docs/VERIFICATION.md`):
+
+```sh
+npm run preview -- --port 4174
+HEADED=1 node scripts/measure-exoplanets.mjs
+```

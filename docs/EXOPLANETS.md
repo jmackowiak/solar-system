@@ -103,4 +103,4 @@ Wizualne odległości rozłożono od 7 do 51 jednostek sceny, a promienie planet
 
 Nie dodajemy niepotwierdzonych okresów obrotu osiowego. Nowe obiekty mają `rotationPeriodDays = 0`, co jest **znacznikiem braku obsługiwanego pomiaru**, a nie stwierdzeniem, że obiekt fizycznie się nie obraca. Nie utożsamiamy przypuszczalnego związania pływowego z pewnym pomiarem okresu. Kod renderera musi traktować ten znacznik jako brak animacji osiowej i nie dzielić przez zero.
 
-Położenia gwiazd w widoku galaktyki należy traktować jako orientacyjne znaczniki z katalogowych kierunków i odległości. Skala lokalnych orbit jest oddzielna od skali galaktycznej. Żaden znacznik w rekonstrukcji nie jest widokiem powierzchni konkretnej gwiazdy.
+Katalogowe RA i Dec zachowujemy w metadanych do ewentualnego przyszłego mapowania. W obecnym widoku galaktyki nie pokazujemy osobnych znaczników tych trzech gwiazd: przy tej skali nakładałyby się na lokalne otoczenie Słońca. Układy wybiera się z listy, a panel podaje ich odległość katalogową; widok Drogi Mlecznej zachowuje jeden schematyczny znacznik Układu Słonecznego. Skala lokalnych orbit jest oddzielna od skali galaktycznej.

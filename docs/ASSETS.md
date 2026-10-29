@@ -50,3 +50,11 @@ cudzych ilustracji ani katalogu gwiazd. Służy jako obraz Open Graph / Twitter.
 Regeneracja: uruchom produkcyjny podgląd na porcie 4174, a następnie
 `ORBITA_SOCIAL_MODE=galaxy node scripts/capture-social-preview.mjs`. Pominięcie
 zmiennej generuje wariant z planetami.
+
+## Powierzchnie egzoplanet
+
+`src/scene/ExoplanetSurface.tsx`: oryginalny shader GLSL autora projektu,
+proceduralne minerały, kratery i pasy chmur. Brak zewnętrznych obrazów i dodatkowego
+transferu tekstur. Palety i relief są artystyczną interpretacją; nie stanowią
+pomiarów powierzchni lub atmosfer. Parametry fizyczne w osobnej strukturze danych
+pochodzą z NASA Exoplanet Archive, z odnośnikami opisanymi w EXOPLANETS.md.

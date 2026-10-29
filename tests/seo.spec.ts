@@ -16,7 +16,7 @@ test("serves complete search and social metadata in HTML without JavaScript", as
     await expect(page.locator('head meta[name="description"]')).toHaveCount(1);
     await expect(page.locator('meta[name="description"]')).toHaveAttribute(
       "content",
-      "Explore the Solar System and Milky Way in 3D. Fly between planets, find our place in the galaxy and discover facts from NASA.",
+      "Explore the Solar System, TRAPPIST-1 and other planetary systems in 3D. Find our place in the Milky Way and discover facts from NASA.",
     );
     await expect(page.locator('link[rel="canonical"]')).toHaveCount(1);
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
@@ -96,7 +96,7 @@ test("keeps canonical stable while translating metadata with the language prefer
   await expect(page).toHaveTitle("Orbita — Układ Słoneczny i Droga Mleczna 3D");
   await expect(page.locator('meta[name="description"]')).toHaveAttribute(
     "content",
-    /Układ Słoneczny i Drogę Mleczną/,
+    /Układ Słoneczny, TRAPPIST-1.*Drodze Mlecznej/,
   );
   await expect(page.locator('meta[property="og:locale"]')).toHaveAttribute(
     "content",

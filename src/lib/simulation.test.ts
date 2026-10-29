@@ -39,4 +39,16 @@ describe("simulation", () => {
       0, 0, 0,
     ]);
   });
+  it("resets to an explicit system-specific speed and preserves numerical orbital timing", () => {
+    const shortOrbit = { orbitRadius: 7, phase: 0.3, orbitalPeriodDays: 1.510826 };
+    const start = initialSimulation(false, 0.25);
+    let subdivided = start;
+    for (let i = 0; i < 480; i++) subdivided = advance(subdivided, 1 / 60);
+    const whole = advance(start, 8);
+    orbitalPosition(shortOrbit, subdivided.days).forEach((v, i) =>
+      expect(v).toBeCloseTo(orbitalPosition(shortOrbit, whole.days)[i], 9),
+    );
+    expect(control(whole, { type: "reset", speed: 0.25, reduced: true }))
+      .toEqual({ days: 0, speed: 0.25, paused: true });
+  });
 });
