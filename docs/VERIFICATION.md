@@ -261,7 +261,7 @@ transferu map powierzchni egzoplanet.
 
 Pierwsza użyteczna scena planet: **536,0 ms / 505,8 ms**, **785 430 B ≈ 0,79 MB**
 transferu przed gotowością. Pomiar wykonano przed ostatnią, niewielką zmianą
-samego CSS przycinającą etykiety nad mobilnym wstępem; kod sceny GPU jest
+samego CSS wygaszającą etykiety nad mobilnym wstępem; kod sceny GPU jest
 identyczny. To krótkie, lokalne pomiary, nie pomiar szybkości publicznego łącza.
 Surowe wyniki lokalne: `artifacts/exoplanet-performance.json` (ignorowane przez Git).
 
@@ -269,5 +269,7 @@ Po końcowej poprawce położenia źródła światła i mobilnego CSS przebudowa
 aplikację i uruchomiono ponownie zestaw obejmujący nowe układy, galaktykę oraz
 SEO: **32/32**, bez pominięć, w 2,6 min. Obejmuje obie konfiguracje ekranu i każdy
 z 19 wariantów powierzchni. Nie wystąpiły nieoczekiwane błędy aplikacji, shaderów
-lub zasobów. Ta regresja dotyczy końcowego builda; wcześniejszy pełny przebieg
-został opisany osobno powyżej.
+lub zasobów. Ta regresja obejmuje końcowy kod funkcjonalny po poprawce oświetlenia; wcześniejszy
+pełny przebieg został opisany osobno powyżej. Następnie wygładzono samą maskę
+etykiet i zawijanie jednostki szybkości w mobilnym CSS. Obraz obejrzano ponownie
+w natywnym WebGL; dodatkowy mobilny scenariusz wyboru trzech układów przeszedł 1/1.

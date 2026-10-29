@@ -2288,8 +2288,11 @@ h1 > span {
 }
 @media (max-width: 760px) {
   /* Reserve the overview's introduction area; picking remains available in the catalog. */
-  .exoplanet-mode:not(.has-selection) .labels-layer { clip-path: inset(358px 0 0); }
+  .exoplanet-mode:not(.has-selection) .labels-layer { mask-image: linear-gradient(to bottom, transparent 358px, #000 378px); }
 }
 @media (max-width: 760px) and (max-height: 680px) {
-  .exoplanet-mode:not(.has-selection) .labels-layer { clip-path: inset(328px 0 0); }
+  .exoplanet-mode:not(.has-selection) .labels-layer { mask-image: linear-gradient(to bottom, transparent 328px, #000 348px); }
+}
+@media (max-width: 760px) {
+  .speed-control output { white-space: nowrap; }
 }
