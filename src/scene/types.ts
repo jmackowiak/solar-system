@@ -1,7 +1,9 @@
 import type { MutableRefObject } from "react";
+import type { Language } from "../i18n";
 import type { Simulation } from "../lib/simulation";
 export type Quality = "auto" | "low" | "high";
 export interface SceneProps {
+  language: Language;
   simulation: MutableRefObject<Simulation>;
   selected: string | null;
   navigation: number;

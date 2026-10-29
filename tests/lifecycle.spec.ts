@@ -1,5 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
 
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("orbita-language", "pl"));
+});
+
 const scene = (page: Page) => page.getByTestId("scene");
 const number = async (page: Page, key: string) =>
   Number(await scene(page).getAttribute(`data-${key}`));

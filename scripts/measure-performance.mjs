@@ -90,7 +90,7 @@ for (const viewport of [
   );
   const overview = await measure(5000);
   await page
-    .getByRole("button", { name: "Wybierz Saturn", exact: true })
+    .getByRole("button", { name: "Select Saturn", exact: true })
     .click();
   const flight = await measure(1700);
   await page.waitForFunction(

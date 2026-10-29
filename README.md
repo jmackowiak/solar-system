@@ -2,7 +2,7 @@
 
 **Wersja produkcyjna: https://solar-system-six-opal.vercel.app**
 
-Polski, interaktywny atlas Układu Słonecznego w 3D. React 19, TypeScript, Vite 8,
+Interaktywny atlas Układu Słonecznego w 3D, po angielsku i po polsku. React 19, TypeScript, Vite 8,
 Three.js r186, React Three Fiber 9 i Drei 10. Bez backendu i runtime CDN.
 
 ## Uruchomienie
@@ -27,6 +27,14 @@ Publiczny hosting: [Vercel](https://solar-system-six-opal.vercel.app). Projekt
 `solar-system` jest połączony z repozytorium GitHub; push na `main` uruchamia
 produkcyjne wdrożenie. `vercel.json` wymusza `npm run build` i katalog `dist`.
 Sam push nie potwierdza udanego wdrożenia — sprawdź status Vercel oraz publiczny adres.
+
+## Język
+
+Domyślny język to angielski, niezależnie od języka przeglądarki. Przełącznik
+**English / Polski** w nagłówku zmienia interfejs, etykiety planet, opisy, wycieczkę,
+jednostki i metadane strony. Wybór jest zapamiętywany lokalnie. Gdy przeglądarka
+blokuje zapis, przełącznik nadal działa w bieżącej sesji. Zmiana języka zachowuje
+wybraną planetę, kamerę, czas i ustawienia symulacji.
 
 ## Sterowanie
 
@@ -119,3 +127,9 @@ Chromium headless może używać SwiftShader. Wyniki w `artifacts/performance.js
 dotyczą komputera wykonującego pomiar. Emulacja telefonu **nie jest pomiarem
 fizycznego telefonu**. Skrypt mierzy dostarczone klatki sceny, także w czasie lotu,
 a nie wynik Lighthouse.
+
+Weryfikacja samych wersji językowych na wdrożonej stronie:
+
+```sh
+PLAYWRIGHT_BASE_URL=https://solar-system-six-opal.vercel.app npx playwright test tests/language.spec.ts
+```

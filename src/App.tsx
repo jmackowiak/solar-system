@@ -5,15 +5,19 @@ import {
   useCallback,
   useEffect,
   useRef,
+  useMemo,
   useState,
 } from "react";
 import type { ReactNode } from "react";
-import { bodies } from "./data/bodies";
+import { bodies as physicalBodies } from "./data/bodies";
+import { englishBodyCopy, englishTourStops } from "./data/body-translations";
+import { useLanguage } from "./i18n";
+import type { Language } from "./i18n";
 import { control, initialSimulation } from "./lib/simulation";
 import type { Quality } from "./scene/types";
 import Icon from "./Icon";
 const SolarScene = lazy(() => import("./scene/SolarScene"));
-const stops = [
+const polishStops = [
   {
     id: "sun",
     title: "Gwiazda, która daje nam życie",
@@ -68,6 +72,15 @@ class SceneBoundary extends Component<
   }
 }
 export default function App() {
+  const { language, setLanguage, t } = useLanguage();
+  const bodies = useMemo(
+    () =>
+      physicalBodies.map((body) =>
+        language === "en" ? { ...body, ...englishBodyCopy[body.id] } : body,
+      ),
+    [language],
+  );
+  const stops = language === "en" ? englishTourStops : polishStops;
   const [reduced, setReduced] = useState(
     () => matchMedia("(prefers-reduced-motion: reduce)").matches,
   );
@@ -128,7 +141,7 @@ export default function App() {
   }, []);
   const select = useCallback((id: string) => {
     lastTrigger.current = document.querySelector<HTMLElement>(
-      `.object-nav button[aria-label="Wybierz ${bodies.find((b) => b.id === id)?.name}"]`,
+      `.object-nav button[data-body-id="${id}"]`,
     );
     setSelected(id);
     setNavigation((n) => n + 1);
@@ -212,7 +225,9 @@ export default function App() {
     select(stops[index].id);
   };
   const format = (n: number) =>
-    new Intl.NumberFormat("pl-PL", { maximumFractionDigits: 2 }).format(n);
+    new Intl.NumberFormat(language === "en" ? "en-GB" : "pl-PL", {
+      maximumFractionDigits: 2,
+    }).format(n);
   return (
     <main
       className={`app ${body ? "has-selection" : ""} ${reduced ? "reduced" : ""}`}
@@ -232,11 +247,12 @@ export default function App() {
               fallback={
                 <div className="scene-loader">
                   <span className="loading-orbit" />
-                  Przygotowywanie obserwatorium…
+                  {t("Przygotowywanie obserwatorium…")}
                 </div>
               }
             >
               <SolarScene
+                language={language}
                 simulation={simulation}
                 selected={selected}
                 navigation={navigation}
@@ -267,7 +283,7 @@ export default function App() {
                     } as React.CSSProperties
                   }
                   onClick={() => select(b.id)}
-                  aria-label={`Odkryj ${b.name}`}
+                  aria-label={`${t("Odkryj")} ${b.name}`}
                 >
                   <span />
                   {b.name}
@@ -275,11 +291,12 @@ export default function App() {
               ))}
             </div>
             <div className="fallback-note">
-              <span className="eyebrow">ATLAS W WERSJI 2D</span>
-              <h2>Kosmos jest wciąż dostępny.</h2>
+              <span className="eyebrow">{t("ATLAS W WERSJI 2D")}</span>
+              <h2>{t("Kosmos jest wciąż dostępny.")}</h2>
               <p>
-                Grafika 3D jest niedostępna w tej przeglądarce. Wybierz obiekt i
-                odkrywaj jego historię.
+                {t(
+                  "Grafika 3D jest niedostępna w tej przeglądarce. Wybierz obiekt i odkrywaj jego historię.",
+                )}
               </p>
               <button
                 className="text-button"
@@ -288,7 +305,8 @@ export default function App() {
                   setNavigation((n) => n + 1);
                 }}
               >
-                Spróbuj uruchomić 3D <Icon name="reset" />
+                {t("Spróbuj uruchomić 3D")}
+                <Icon name="reset" />
               </button>
             </div>
           </div>
@@ -296,42 +314,58 @@ export default function App() {
       </div>
       <div className="vignette" aria-hidden="true" />
       <header className="topbar">
-        <a className="brand" href="/" aria-label="Orbita — strona główna">
+        <a className="brand" href="/" aria-label={t("Orbita — strona główna")}>
           <Icon name="orbit" size={33} />
           <span>
-            ORBITA<small>ATLAS UKŁADU SŁONECZNEGO</small>
+            ORBITA<small>{t("ATLAS UKŁADU SŁONECZNEGO")}</small>
           </span>
         </a>
         <div className="top-actions">
+          <select
+            className="language-select"
+            aria-label="Language / Język"
+            value={language}
+            onChange={(e) => setLanguage(e.target.value as Language)}
+          >
+            <option value="en" lang="en">
+              English
+            </option>
+            <option value="pl" lang="pl">
+              Polski
+            </option>
+          </select>
           <span className="live-status">
             <i />
-            {fallback ? "WIDOK 2D" : "OBSERWATORIUM 3D"}
+            {fallback ? t("WIDOK 2D") : t("OBSERWATORIUM 3D")}
           </span>
           <button
             className={`motion-button ${reduced ? "pressed" : ""}`}
-            aria-label="Ogranicz animacje"
+            aria-label={t("Ogranicz animacje")}
             aria-pressed={reduced}
             onClick={toggleReduced}
           >
             <Icon name="motion" />
-            <span>{reduced ? "Ograniczony ruch" : "Ogranicz animacje"}</span>
+            <span>
+              {reduced ? t("Ograniczony ruch") : t("Ogranicz animacje")}
+            </span>
           </button>
           <button
             className="round-button"
             ref={aboutButton}
             onClick={() => setAbout(true)}
-            aria-label="O atlasie"
+            aria-label={t("O atlasie")}
           >
             <Icon name="info" />
           </button>
         </div>
       </header>
-      <nav className="object-nav" aria-label="Obiekty Układu Słonecznego">
-        <span className="eyebrow nav-heading">ODKRYWAJ</span>
+      <nav className="object-nav" aria-label={t("Obiekty Układu Słonecznego")}>
+        <span className="eyebrow nav-heading">{t("ODKRYWAJ")}</span>
         {bodies.map((b, i) => (
           <button
             key={b.id}
-            aria-label={`Wybierz ${b.name}`}
+            data-body-id={b.id}
+            aria-label={`${t("Wybierz")} ${b.name}`}
             aria-pressed={selected === b.id}
             onClick={() => {
               setTour(null);
@@ -350,68 +384,75 @@ export default function App() {
           </button>
         ))}
         <span className="nav-end">
-          JEDNA GWIAZDA.
+          {t("JEDNA GWIAZDA.")}
           <br />
-          NIESKOŃCZONA CIEKAWOŚĆ.
+          {t("NIESKOŃCZONA CIEKAWOŚĆ.")}
         </span>
       </nav>
       {!body && (
         <section className="intro">
           <div className="eyebrow">
-            <span className="tiny-cross">+</span> TWOJE MIEJSCE WE WSZECHŚWIECIE
+            <span className="tiny-cross">+</span>{" "}
+            {t("TWOJE MIEJSCE WE WSZECHŚWIECIE")}
           </div>
           <h1>
-            Mały punkt.
+            {t("Mały punkt.")}
             <br />
-            <span>Wielkie odkrycia.</span>
+            <span>{t("Wielkie odkrycia.")}</span>
           </h1>
           <p>
-            Osiem planet. Jedna niezwykła podróż.
+            {t("Osiem planet. Jedna niezwykła podróż.")}
             <br />
-            Spójrz na nasz układ z nowej perspektywy.
+            {t("Spójrz na nasz układ z nowej perspektywy.")}
           </p>
           <button className="journey-button" onClick={() => step(0)}>
-            Rozpocznij podróż <Icon name="arrow" />
+            {t("Rozpocznij podróż")}
+            <Icon name="arrow" />
           </button>
         </section>
       )}
       {!body && (
         <aside className="overview-note">
-          <span className="eyebrow">UKŁAD SŁONECZNY</span>
+          <span className="eyebrow">{t("UKŁAD SŁONECZNY")}</span>
           <p>
-            4,6 <span>mld lat historii</span>
+            {t("4,6")}
+            <span>{t("mld lat historii")}</span>
           </p>
           <div className="note-line" />
           <span>
-            Wybierz świat, który Cię ciekawi.
+            {t("Wybierz świat, który Cię ciekawi.")}
             <br />
-            Resztą zajmie się grawitacja.
+            {t("Resztą zajmie się grawitacja.")}
           </span>
         </aside>
       )}
       <div className="scene-tools">
-        <button className="tool-button" onClick={home} aria-label="Cały układ">
+        <button
+          className="tool-button"
+          onClick={home}
+          aria-label={t("Cały układ")}
+        >
           <Icon name="home" />
-          <span>Cały układ</span>
+          <span>{t("Cały układ")}</span>
         </button>
         <button
           ref={settingsButton}
           className={`tool-button ${settings ? "active" : ""}`}
           onClick={() => setSettings(!settings)}
           aria-expanded={settings}
-          aria-label="Ustawienia widoku"
+          aria-label={t("Ustawienia widoku")}
         >
           <Icon name="settings" />
-          <span>Widok</span>
+          <span>{t("Widok")}</span>
         </button>
       </div>
       {settings && (
-        <section className="settings-panel" aria-label="Ustawienia widoku">
+        <section className="settings-panel" aria-label={t("Ustawienia widoku")}>
           <div className="panel-top">
-            <span className="eyebrow">TWOJE OBSERWATORIUM</span>
+            <span className="eyebrow">{t("TWOJE OBSERWATORIUM")}</span>
             <button
               className="round-button"
-              aria-label="Zamknij ustawienia"
+              aria-label={t("Zamknij ustawienia")}
               onClick={() => {
                 setSettings(false);
                 settingsButton.current?.focus();
@@ -421,7 +462,7 @@ export default function App() {
             </button>
           </div>
           <label className="switch-row">
-            Orbity
+            {t("Orbity")}
             <input
               type="checkbox"
               checked={orbits}
@@ -429,7 +470,7 @@ export default function App() {
             />
           </label>
           <label className="switch-row">
-            Etykiety
+            {t("Etykiety")}
             <input
               type="checkbox"
               checked={labels}
@@ -437,39 +478,43 @@ export default function App() {
             />
           </label>
           <label className="quality-label">
-            Jakość grafiki
+            {t("Jakość grafiki")}
             <select
-              aria-label="Jakość grafiki"
+              aria-label={t("Jakość grafiki")}
               value={quality}
               onChange={(e) => setQuality(e.target.value as Quality)}
             >
-              <option value="auto">Auto</option>
-              <option value="low">Niska</option>
-              <option value="high">Wysoka</option>
+              <option value="auto">{t("Auto")}</option>
+              <option value="low">{t("Niska")}</option>
+              <option value="high">{t("Wysoka")}</option>
             </select>
           </label>
           <p>
-            Auto: {autoQuality === "low" ? "oszczędna" : "pełna"} jakość.
-            Rozdzielczość obniża się przy utrzymujących się spadkach płynności.
+            {t("Auto:")} {autoQuality === "low" ? t("oszczędna") : t("pełna")}{" "}
+            {t(
+              "jakość. Rozdzielczość obniża się przy utrzymujących się spadkach płynności.",
+            )}
           </p>
         </section>
       )}
       {body && (
         <section
           className={`object-panel ${collapsed ? "collapsed" : ""}`}
-          aria-label="Informacje o obiekcie"
+          aria-label={t("Informacje o obiekcie")}
         >
           <div className="mobile-handle" />
           <div className="panel-top">
             <span className="eyebrow">
               {tour !== null
-                ? `PODRÓŻ · ${String(tour + 1).padStart(2, "0")} / 05`
-                : `KATALOG · ${String(bodies.indexOf(body)).padStart(2, "0")} / 08`}
+                ? `${t("PODRÓŻ")} · ${String(tour + 1).padStart(2, "0")} / 05`
+                : `${t("KATALOG")} · ${String(bodies.indexOf(body)).padStart(2, "0")} / 08`}
             </span>
             <div className="panel-actions">
               <button
                 className="round-button collapse-button"
-                aria-label={collapsed ? "Rozwiń informacje" : "Zwiń informacje"}
+                aria-label={
+                  collapsed ? t("Rozwiń informacje") : t("Zwiń informacje")
+                }
                 aria-expanded={!collapsed}
                 onClick={() => setCollapsed(!collapsed)}
               >
@@ -477,7 +522,7 @@ export default function App() {
               </button>
               <button
                 className="round-button"
-                aria-label="Zamknij informacje"
+                aria-label={t("Zamknij informacje")}
                 onClick={home}
               >
                 <Icon name="close" />
@@ -493,30 +538,30 @@ export default function App() {
             <p className="description">{body.description}</p>
             <dl>
               <div>
-                <dt>ŚREDNIA ŚREDNICA</dt>
+                <dt>{t("ŚREDNIA ŚREDNICA")}</dt>
                 <dd>
                   {format(body.diameterKm)} <span>km</span>
                 </dd>
               </div>
               {body.distanceMillionKm !== null && (
                 <div>
-                  <dt>ODLEGŁOŚĆ OD SŁOŃCA · ŚREDNIA</dt>
+                  <dt>{t("ODLEGŁOŚĆ OD SŁOŃCA · ŚREDNIA")}</dt>
                   <dd>
-                    {format(body.distanceMillionKm)} <span>mln km</span>
+                    {format(body.distanceMillionKm)} <span>{t("mln km")}</span>
                   </dd>
                 </div>
               )}
               {body.orbitalPeriodDays !== null && (
                 <div>
-                  <dt>OKRES OBIEGU</dt>
+                  <dt>{t("OKRES OBIEGU")}</dt>
                   <dd>
                     {body.orbitalPeriodDays > 700
                       ? format(body.orbitalPeriodDays / 365.25)
                       : format(body.orbitalPeriodDays)}{" "}
                     <span>
                       {body.orbitalPeriodDays > 700
-                        ? "lat ziemskich"
-                        : "dni ziemskich"}
+                        ? t("lat ziemskich")
+                        : t("dni ziemskich")}
                     </span>
                   </dd>
                 </div>
@@ -524,7 +569,7 @@ export default function App() {
             </dl>
             <div className="fact">
               <span className="eyebrow">
-                <Icon name="plus" size={14} /> WARTO WIEDZIEĆ
+                <Icon name="plus" size={14} /> {t("WARTO WIEDZIEĆ")}
               </span>
               <p>{body.fact}</p>
             </div>
@@ -534,7 +579,8 @@ export default function App() {
               target="_blank"
               rel="noreferrer"
             >
-              Dane i odkrycia NASA <span>↗</span>
+              {t("Dane i odkrycia NASA")}
+              <span>↗</span>
             </a>
             {tour !== null ? (
               <div className="tour">
@@ -543,7 +589,7 @@ export default function App() {
                 <div className="tour-buttons">
                   <button
                     className="round-button"
-                    aria-label="Poprzedni przystanek"
+                    aria-label={t("Poprzedni przystanek")}
                     disabled={tour === 0}
                     onClick={() => step(tour - 1)}
                   >
@@ -552,10 +598,11 @@ export default function App() {
                   {tour < stops.length - 1 ? (
                     <button
                       className="journey-button"
-                      aria-label="Następny przystanek"
+                      aria-label={t("Następny przystanek")}
                       onClick={() => step(tour + 1)}
                     >
-                      Dalej <Icon name="arrow" />
+                      {t("Dalej")}
+                      <Icon name="arrow" />
                     </button>
                   ) : (
                     <button
@@ -565,19 +612,21 @@ export default function App() {
                         home();
                       }}
                     >
-                      Zakończ podróż <Icon name="home" />
+                      {t("Zakończ podróż")}
+                      <Icon name="home" />
                     </button>
                   )}
                 </div>
                 {tour < stops.length - 1 && (
                   <button className="end-tour" onClick={() => setTour(null)}>
-                    Zakończ podróż
+                    {t("Zakończ podróż")}
                   </button>
                 )}
               </div>
             ) : (
               <button className="panel-journey" onClick={() => step(0)}>
-                Rozpocznij podróż <Icon name="arrow" />
+                {t("Rozpocznij podróż")}
+                <Icon name="arrow" />
               </button>
             )}
           </div>
@@ -586,35 +635,40 @@ export default function App() {
       <footer className="bottom-ui">
         <div className="control-hint">
           <span className="mouse-symbol" />
-          Przeciągnij, aby obrócić<span>·</span>Przewiń, aby przybliżyć
-          <span>·</span>Kliknij planetę
+          {t("Przeciągnij, aby obrócić")}
+          <span>·</span>
+          {t("Przewiń, aby przybliżyć")}
+          <span>·</span>
+          {t("Kliknij planetę")}
         </div>
-        <section className="simulation" aria-label="Sterowanie symulacją">
+        <section className="simulation" aria-label={t("Sterowanie symulacją")}>
           <button
             className="play-button"
             onClick={togglePause}
-            aria-label={paused ? "Wznów symulację" : "Wstrzymaj symulację"}
+            aria-label={
+              paused ? t("Wznów symulację") : t("Wstrzymaj symulację")
+            }
           >
             <Icon name={paused ? "play" : "pause"} size={19} />
           </button>
           <div className="sim-time">
             <span className="eyebrow">
-              {paused ? "CZAS WSTRZYMANY" : "CZAS SYMULACJI"}
+              {paused ? t("CZAS WSTRZYMANY") : t("CZAS SYMULACJI")}
             </span>
             <output data-testid="simulation-time">
-              {format(days)} <span>dni</span>
+              {format(days)} <span>{t("dni")}</span>
             </output>
           </div>
           <div className="speed-control">
             <div>
-              <label htmlFor="speed">TEMPO PODRÓŻY</label>
+              <label htmlFor="speed">{t("TEMPO PODRÓŻY")}</label>
               <output>
-                {speed} <span>dni / s</span>
+                {speed} <span>{t("dni / s")}</span>
               </output>
             </div>
             <input
               id="speed"
-              aria-label="Szybkość symulacji"
+              aria-label={t("Szybkość symulacji")}
               type="range"
               min="0"
               max="100"
@@ -632,8 +686,8 @@ export default function App() {
           </div>
           <button
             className="round-button reset"
-            aria-label="Resetuj symulację"
-            title="Reset: dzień 0, 8 dni/s, widok całego układu"
+            aria-label={t("Resetuj symulację")}
+            title={t("Reset: dzień 0, 8 dni/s, widok całego układu")}
             onClick={reset}
           >
             <Icon name="reset" />
@@ -641,34 +695,39 @@ export default function App() {
         </section>
         <div className="bottom-caption">
           <span>
-            <i /> SYMULACJA POGLĄDOWA · ORBITY PRZYBLIŻONE
+            <i /> {t("SYMULACJA POGLĄDOWA · ORBITY PRZYBLIŻONE")}
           </span>
           <span>
-            Widok poglądowy — rozmiary i odległości nie zachowują wspólnej skali
+            {t(
+              "Widok poglądowy — rozmiary i odległości nie zachowują wspólnej skali",
+            )}
           </span>
           <span className="coordinates">SOL / 01</span>
         </div>
       </footer>
       {!fallback && !ready && (
         <div className="loading-badge" role="status">
-          Uruchamianie sceny 3D…
+          {t("Uruchamianie sceny 3D…")}
         </div>
       )}
       {textureErrors > 0 && (
         <div className="texture-notice" role="status">
-          Nie udało się wczytać części tekstur. Widok uproszczony jest aktywny.
+          {t(
+            "Nie udało się wczytać części tekstur. Widok uproszczony jest aktywny.",
+          )}
           <button
             onClick={() => {
               setTextureErrors(0);
               setTextureVersion((v) => v + 1);
             }}
           >
-            Ponów
+            {t("Ponów")}
           </button>
         </div>
       )}
       <span className="sr-only" role="status">
-        {ready ? "Scena 3D gotowa." : ""} Wczytano {loaded} map powierzchni.
+        {ready ? t("Scena 3D gotowa.") : ""} {t("Wczytano")} {loaded}{" "}
+        {t("map powierzchni.")}
       </span>
       <dialog
         ref={aboutDialog}
@@ -679,10 +738,10 @@ export default function App() {
         }}
       >
         <div className="panel-top">
-          <span className="eyebrow">O ATLASIE</span>
+          <span className="eyebrow">{t("O ATLASIE")}</span>
           <button
             className="round-button"
-            aria-label="Zamknij opis atlasu"
+            aria-label={t("Zamknij opis atlasu")}
             onClick={() => {
               setAbout(false);
               aboutButton.current?.focus();
@@ -691,24 +750,21 @@ export default function App() {
             <Icon name="close" />
           </button>
         </div>
-        <h2>Przestrzeń do odkrywania.</h2>
+        <h2>{t("Przestrzeń do odkrywania.")}</h2>
         <p>
-          Orbita to interaktywny atlas Słońca i ośmiu planet. Obracaj widok
-          przeciągnięciem, przybliżaj kółkiem lub gestem dwóch palców. Na
-          klawiaturze wybieraj obiekty tabulatorem i Enterem. Spacja wstrzymuje
-          czas, Escape przywraca cały układ.
+          {t(
+            "Orbita to interaktywny atlas Słońca i ośmiu planet. Obracaj widok przeciągnięciem, przybliżaj kółkiem lub gestem dwóch palców. Na klawiaturze wybieraj obiekty tabulatorem i Enterem. Spacja wstrzymuje czas, Escape przywraca cały układ.",
+          )}
         </p>
         <p>
-          To symulacja poglądowa, bez efemeryd. Pozycje początkowe są umowne.
-          Orbity są kołowe i współpłaszczyznowe; rozmiary i odległości nie
-          zachowują wspólnej skali. Względne okresy obiegu odpowiadają danym
-          NASA, a obroty osiowe są wizualnie spowolnione.
+          {t(
+            "To symulacja poglądowa, bez efemeryd. Pozycje początkowe są umowne. Orbity są kołowe i współpłaszczyznowe; rozmiary i odległości nie zachowują wspólnej skali. Względne okresy obiegu odpowiadają danym NASA, a obroty osiowe są wizualnie spowolnione.",
+          )}
         </p>
         <p>
-          Reset przywraca dzień 0, tempo 8 dni/s i cały układ. Przy ograniczonym
-          ruchu czas jest domyślnie wstrzymany; możesz świadomie wznowić
-          symulację przyciskiem odtwarzania. Przeloty i animacje dekoracyjne
-          pozostają wyłączone.
+          {t(
+            "Reset przywraca dzień 0, tempo 8 dni/s i cały układ. Przy ograniczonym ruchu czas jest domyślnie wstrzymany; możesz świadomie wznowić symulację przyciskiem odtwarzania. Przeloty i animacje dekoracyjne pozostają wyłączone.",
+          )}
         </p>
         <a
           className="source"
@@ -716,11 +772,12 @@ export default function App() {
           target="_blank"
           rel="noreferrer"
         >
-          Odkrywaj dalej z NASA ↗
+          {t("Odkrywaj dalej z NASA ↗")}
         </a>
         <p className="credits">
-          Dane: NASA / JPL. Ziemia i chmury: NASA Visible Earth, Blue Marble
-          (Reto Stöckli). Pozostałe powierzchnie: własne mapy proceduralne.
+          {t(
+            "Dane: NASA / JPL. Ziemia i chmury: NASA Visible Earth, Blue Marble (Reto Stöckli). Pozostałe powierzchnie: własne mapy proceduralne.",
+          )}
         </p>
       </dialog>
     </main>

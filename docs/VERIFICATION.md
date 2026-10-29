@@ -103,3 +103,27 @@ wdrożenie. Konfiguracja `vercel.json` zachowuje Vite, wymusza typowany build
 `npm run build` i publikuje `dist`.
 Stan GitHub Actions jest informacją z bieżącego sprawdzenia w raporcie końcowym;
 nie wpisujemy zmiennego stanu CI do dokumentacji jako gwarancji.
+
+## Wersje językowe — 29 października 2026
+
+Dodano pełny wariant angielski jako domyślny oraz przełącznik English / Polski.
+Obejmuje on interfejs, etykiety 3D, nazwy i opisy dziewięciu obiektów, ciekawostki,
+pięć przystanków wycieczki, jednostki i liczby, komunikaty, nazwy dostępności,
+`html.lang`, tytuł i opis strony. Wielkości astronomiczne pozostają wspólne.
+Wybór jest zapamiętywany w `localStorage`; przy zablokowanym dostępie nadal
+można przełączać język w bieżącej sesji. Nowa wizyta domyślnie używa angielskiego,
+także przy polskim języku przeglądarki. Język nie resetuje kamery ani symulacji.
+
+Dodano testy preferencji i kompletności tłumaczeń oraz osiem scenariuszy E2E
+na desktopie i emulowanym telefonie: domyślny angielski, zapamiętanie wyboru,
+przełączanie otwartego panelu i etykiet 3D, zachowanie czasu/kamery, aktywna
+wycieczka, ustawienia i opis atlasu oraz brak WebGL/zablokowany magazyn.
+Obejrzano wariant angielski przy 1440, 390 i 320 px oraz oba języki z panelem Ziemi.
+Wyniki FPS powyżej dotyczą wcześniejszego, wyraźnie datowanego pomiaru;
+nie powtarzano pomiaru wydajności GPU dla samej zmiany językowej.
+
+Weryfikacja lokalna zmiany językowej: typy, lint i build bez błędów;
+**11/11** testów Vitest/RTL oraz **40/40** scenariuszy Playwright przeszło.
+Dwa scenariusze dotykowe są pomijane wyłącznie w projekcie desktopowym;
+w projekcie mobilnym przechodzą. Konfiguracja Playwright obsługuje
+`PLAYWRIGHT_BASE_URL`, aby te same scenariusze językowe uruchamiać na live.

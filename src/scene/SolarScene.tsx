@@ -4,6 +4,8 @@ import { Html } from "@react-three/drei";
 import { OrbitControls as Controls } from "three/addons/controls/OrbitControls.js";
 import * as THREE from "three";
 import { bodies } from "../data/bodies";
+import { englishBodyCopy } from "../data/body-translations";
+import { translate } from "../i18n";
 import type { Body } from "../data/bodies";
 import { orbitalPosition } from "../lib/simulation";
 import type { SceneProps } from "./types";
@@ -252,7 +254,9 @@ function Planet({
             className={`planet-label ${props.selected === body.id ? "active" : ""}`}
             onClick={() => props.onSelect(body.id)}
           >
-            {body.name}
+            {props.language === "en"
+              ? englishBodyCopy[body.id].name
+              : body.name}
             <span />
           </button>
         </Html>
@@ -631,7 +635,10 @@ export default function SolarScene(props: SceneProps) {
   return (
     <>
       <Canvas
-        aria-label="Interaktywny Układ Słoneczny 3D"
+        aria-label={translate(
+          props.language,
+          "Interaktywny Układ Słoneczny 3D",
+        )}
         camera={{
           position: window.innerWidth < 700 ? [98, 182, 230] : [35, 65, 82],
           fov: 46,
@@ -645,7 +652,11 @@ export default function SolarScene(props: SceneProps) {
           alpha: true,
           powerPreference: "high-performance",
         }}
-        fallback={<span>Renderer 3D jest niedostępny.</span>}
+        fallback={
+          <span>
+            {translate(props.language, "Renderer 3D jest niedostępny.")}
+          </span>
+        }
       >
         <ambientLight intensity={0.24} />
         <pointLight

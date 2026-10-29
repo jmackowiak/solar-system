@@ -8,6 +8,7 @@ import {
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import App from "./App";
 beforeEach(() => {
+  localStorage.setItem("orbita-language", "pl");
   HTMLDialogElement.prototype.close = vi.fn();
   HTMLDialogElement.prototype.showModal = vi.fn();
   vi.stubGlobal(
@@ -22,6 +23,7 @@ beforeEach(() => {
 });
 afterEach(() => {
   cleanup();
+  localStorage.clear();
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
 });

@@ -38,6 +38,7 @@ async function frames(page: Page, count = 20) {
 
 let unexpectedErrors: string[] = [];
 test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("orbita-language", "pl"));
   unexpectedErrors = [];
   page.on("pageerror", (error) => unexpectedErrors.push(error.message));
   page.on("console", (message) => {
