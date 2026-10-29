@@ -18,6 +18,30 @@ export function persistLanguage(language: Language) {
   }
 }
 export const english = {
+  "Widok Drogi Mlecznej pokazuje przybliżone położenie Układu Słonecznego. Galaktyka ma osobną skalę i jest statyczną rekonstrukcją; podczas jej oglądania czas symulacji planet jest zachowany.":
+    "The Milky Way view marks the approximate location of our Solar System. The galaxy uses its own scale and is a static reconstruction; your planetary simulation time is preserved while you explore it.",
+  "Przygotowywanie mapy galaktyki…": "Preparing the galactic map…",
+  "Droga Mleczna": "Milky Way",
+  "Układ Słoneczny": "Solar System",
+  "Skala eksploracji": "Exploration scale",
+  "Gdzie jesteśmy w galaktyce?": "Find our place in the galaxy",
+  "O Drodze Mlecznej": "About the Milky Way",
+  "MAPA GALAKTYKI": "GALACTIC MAP",
+  "ATLAS DROGI MLECZNEJ": "MILKY WAY ATLAS",
+  "NASZE POŁOŻENIE": "OUR LOCATION",
+  "Wejdź do Układu Słonecznego": "Enter Solar System",
+  "ODLEGŁOŚĆ OD CENTRUM": "DISTANCE FROM THE CENTRE",
+  "ŚREDNICA DYSKU": "DISK DIAMETER",
+  "OBIEG WOKÓŁ CENTRUM": "ORBIT AROUND THE CENTRE",
+  "OSOBNA SKALA": "INDEPENDENT SCALE",
+  "Przywróć widok": "Reset view",
+  "Zmiana skali": "Changing scale",
+  "Model galaktyki — położenia i struktura przybliżone":
+    "Galaxy model — approximate structure and locations",
+  "Wybierz nasz Układ Słoneczny": "Select our Solar System",
+  "Widok galaktyki jest statyczny. Czas symulacji planet jest zachowany do powrotu.":
+    "The galaxy is a static reconstruction. Your planetary simulation time is preserved until you return.",
+
   "Przygotowywanie obserwatorium…": "Preparing the observatory…",
   "ATLAS W WERSJI 2D": "THE ATLAS IN 2D",
   "Kosmos jest wciąż dostępny.": "The cosmos is still within reach.",

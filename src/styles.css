@@ -1856,3 +1856,384 @@ h1 > span {
   color: var(--accent);
   text-decoration: underline;
 }
+/* Two independently scaled maps share one renderer. */
+.mode-switch {
+  position: absolute;
+  top: 107px;
+  left: 232px;
+  display: flex;
+  gap: 3px;
+  padding: 4px;
+  border: 1px solid #ffffff16;
+  border-radius: 7px;
+  background: #0c131adc;
+  backdrop-filter: blur(14px);
+  z-index: 18;
+}
+.mode-switch button {
+  min-height: 34px;
+  padding: 7px 15px;
+  border-radius: 4px;
+  font-size: 10px;
+  color: #8f9da8;
+  white-space: nowrap;
+}
+.mode-switch button[aria-pressed="true"] {
+  color: #e7c193;
+  background: #d7ae7b15;
+}
+.mode-switch button:hover {
+  background: #ffffff0a;
+}
+.solar-mode .intro {
+  top: 171px;
+}
+.galaxy-discover {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  font-size: 10px;
+  color: #94a4b0;
+  padding: 15px 0;
+  pointer-events: auto;
+}
+.galaxy-discover:hover {
+  color: var(--accent);
+}
+.galaxy-mode .object-nav {
+  display: none;
+}
+.galaxy-mode .vignette {
+  background: linear-gradient(
+    0deg,
+    #080c10,
+    transparent 20%,
+    transparent 85%,
+    #080c10aa
+  );
+}
+.galaxy-panel h2 {
+  font-size: 37px;
+  letter-spacing: -1.4px;
+}
+.galaxy-panel .panel-top {
+  margin-bottom: 20px;
+}
+.galaxy-panel .description {
+  margin-bottom: 17px;
+}
+.galaxy-panel dd {
+  font-size: 19px;
+}
+.galaxy-location {
+  border-left: 1px solid #d8b27b66;
+  padding-left: 13px;
+  margin-bottom: 19px;
+}
+.galaxy-location .eyebrow {
+  font-size: 7px;
+  color: var(--accent);
+}
+.galaxy-location p {
+  font-size: 11px;
+  line-height: 1.8;
+  color: #c0c9d0;
+  margin: 6px 0 0;
+}
+.galaxy-enter {
+  width: 100%;
+  margin: 0 0 23px;
+  gap: 12px;
+}
+.galaxy-panel .fact p {
+  font-size: 9px;
+}
+.galaxy-footer {
+  position: absolute;
+  bottom: 24px;
+  left: 20px;
+  right: 380px;
+  z-index: 12;
+  text-align: center;
+  pointer-events: none;
+}
+.galaxy-footer .control-hint {
+  margin-bottom: 15px;
+}
+.galaxy-footer p {
+  font-size: 9px;
+  color: #9caab6;
+  margin: 0 0 9px;
+}
+.galaxy-footer small {
+  font-size: 8px;
+  color: #738593;
+  display: block;
+  max-width: 500px;
+  margin: auto;
+  line-height: 1.7;
+}
+.scale-flight-label {
+  position: absolute;
+  top: 44%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border: 1px solid #b79d7440;
+  background: #0c131caa;
+  backdrop-filter: blur(8px);
+  padding: 10px 15px;
+  border-radius: 30px;
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  color: #e2bf92;
+  z-index: 14;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+.space[data-scale-flight="true"] .scale-flight-label {
+  opacity: 1;
+}
+.space[data-scale-flight="true"] .planet-label,
+.space[data-scale-flight="true"] .galaxy-marker {
+  visibility: hidden;
+  pointer-events: none;
+}
+.galaxy-fallback {
+  position: absolute;
+  inset: 100px 40px 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 13px;
+}
+.galaxy-fallback svg {
+  width: min(70vw, 520px);
+  max-height: 65%;
+  overflow: visible;
+}
+.fallback-location {
+  font-size: 12px;
+  color: var(--accent);
+}
+.galaxy-fallback .journey-button {
+  min-width: 210px;
+  justify-content: space-between;
+}
+@media (min-width: 1500px) {
+  .mode-switch {
+    left: 270px;
+    top: 116px;
+  }
+  .solar-mode .intro {
+    top: 188px;
+  }
+}
+@media (max-width: 1050px) and (min-width: 761px) {
+  .mode-switch {
+    left: 185px;
+  }
+  .galaxy-footer {
+    right: 320px;
+  }
+  .galaxy-panel h2 {
+    font-size: 32px;
+  }
+}
+@media (max-height: 760px) and (min-width: 761px) {
+  .mode-switch {
+    top: 100px;
+  }
+  .solar-mode .intro {
+    top: 156px;
+  }
+  .solar-mode .intro h1 {
+    font-size: 34px;
+  }
+  .galaxy-discover {
+    padding-top: 10px;
+  }
+}
+@media (max-width: 760px) {
+  .mode-switch {
+    top: 94px;
+    left: 21px;
+    right: 21px;
+    justify-content: center;
+  }
+  .mode-switch button {
+    min-height: 44px;
+    flex: 1;
+    padding: 7px 10px;
+    font-size: 10px;
+  }
+  .solar-mode .intro {
+    top: 158px;
+  }
+  .solar-mode .intro p {
+    margin-bottom: 15px;
+  }
+  .galaxy-discover {
+    font-size: 9px;
+    padding: 12px 0;
+  }
+  .galaxy-panel h2 {
+    font-size: 29px;
+  }
+  .galaxy-panel .panel-top {
+    margin-bottom: 0;
+  }
+  .galaxy-panel .description {
+    font-size: 11px;
+  }
+  .galaxy-panel dd {
+    font-size: 16px;
+  }
+  .galaxy-panel .galaxy-enter {
+    font-size: 10px;
+    min-height: 44px;
+    margin-bottom: 15px;
+  }
+  .galaxy-footer {
+    bottom: 337px;
+    left: 18px;
+    right: 18px;
+  }
+  .galaxy-footer .control-hint {
+    display: none;
+  }
+  .galaxy-footer p {
+    font-size: 7px;
+    margin-bottom: 5px;
+  }
+  .galaxy-footer small {
+    display: none;
+  }
+  .galaxy-mode .scene-tools {
+    bottom: 399px;
+  }
+  .galaxy-mode .settings-panel {
+    bottom: 400px;
+  }
+  .galaxy-mode:has(.collapsed) .galaxy-footer {
+    bottom: 140px;
+  }
+  .galaxy-mode:has(.collapsed) .scene-tools {
+    bottom: 205px;
+  }
+  .galaxy-mode:has(.collapsed) .settings-panel {
+    bottom: 200px;
+  }
+  .galaxy-fallback {
+    inset: 145px 20px 70px;
+    gap: 12px;
+  }
+  .galaxy-fallback svg {
+    max-height: 60%;
+    width: 80vw;
+  }
+  .galaxy-fallback > .eyebrow {
+    font-size: 7px;
+  }
+  .galaxy-marker {
+    max-width: 175px;
+  }
+  .galaxy-marker strong {
+    font-size: 12px !important;
+  }
+  .scale-flight-label {
+    top: 52%;
+    font-size: 8px;
+  }
+}
+@media (max-width: 760px) and (max-height: 680px) {
+  .solar-mode .intro {
+    top: 149px;
+  }
+  .solar-mode .intro h1 {
+    font-size: 27px;
+    margin: 11px 0;
+  }
+  .solar-mode .intro p {
+    display: none;
+  }
+  .solar-mode .intro .journey-button {
+    margin-top: 13px;
+  }
+  .galaxy-discover {
+    padding: 10px 0;
+  }
+  .galaxy-footer {
+    bottom: 282px;
+  }
+  .galaxy-mode .scene-tools {
+    bottom: 344px;
+  }
+  .galaxy-mode .settings-panel {
+    bottom: 345px;
+  }
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  .mode-switch {
+    left: 180px;
+    top: 73px;
+  }
+  .mode-switch button {
+    min-height: 30px;
+    font-size: 9px;
+  }
+  .solar-mode .intro {
+    top: 121px;
+  }
+  .galaxy-discover {
+    display: none;
+  }
+  .galaxy-footer {
+    bottom: 20px;
+    right: 310px;
+  }
+  .galaxy-footer .control-hint {
+    display: none;
+  }
+  .galaxy-mode .scene-tools {
+    left: 185px;
+    right: auto;
+    bottom: 90px;
+  }
+  .galaxy-mode .settings-panel {
+    left: 195px;
+    right: auto;
+    bottom: 85px;
+  }
+}
+.scale-flight-label {
+  visibility: hidden;
+}
+.space[data-scale-flight="true"] .scale-flight-label {
+  visibility: visible;
+}
+@media (max-width: 760px) {
+  .galaxy-marker {
+    transform: translateY(54px);
+    max-width: 160px;
+  }
+  .galaxy-marker:before {
+    content: "";
+    position: absolute;
+    top: -35px;
+    left: 50%;
+    height: 30px;
+    width: 1px;
+    background: linear-gradient(#d6b08499, #d6b08433);
+  }
+  .galaxy-mode .scene-tools {
+    left: 20px;
+    right: auto;
+  }
+  .galaxy-mode .settings-panel {
+    left: 75px;
+    right: auto;
+    width: min(260px, calc(100vw - 95px));
+  }
+}

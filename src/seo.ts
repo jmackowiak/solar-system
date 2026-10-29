@@ -3,17 +3,17 @@ export const siteUrl = "https://solar-system-six-opal.vercel.app/";
 export const socialImage = new URL("og-image.png", siteUrl).href;
 export const seo = {
   en: {
-    title: "Orbita — Interactive 3D Solar System",
+    title: "Orbita — Solar System and Milky Way in 3D",
     description:
-      "Explore the Sun and all eight planets in an interactive 3D Solar System. Fly between worlds, control the simulation and discover facts from NASA.",
+      "Explore the Solar System and Milky Way in 3D. Fly between planets, find our place in the galaxy and discover facts from NASA.",
     locale: "en_GB",
     imageAlt:
       "Orbita interactive 3D Solar System with the Sun, eight planets and their orbits.",
   },
   pl: {
-    title: "Orbita — interaktywny Układ Słoneczny 3D",
+    title: "Orbita — Układ Słoneczny i Droga Mleczna 3D",
     description:
-      "Odkrywaj Słońce i osiem planet w interaktywnym Układzie Słonecznym 3D. Podróżuj między światami, steruj symulacją i poznawaj fakty ze źródeł NASA.",
+      "Odkrywaj Układ Słoneczny i Drogę Mleczną w 3D. Podróżuj między planetami, znajdź nasze miejsce w galaktyce i poznawaj fakty ze źródeł NASA.",
     locale: "pl_PL",
     imageAlt:
       "Interaktywny Układ Słoneczny 3D w Orbicie: Słońce, osiem planet i ich orbity.",

@@ -12,11 +12,11 @@ test("serves complete search and social metadata in HTML without JavaScript", as
     expect((await response!.text()).indexOf('charset="UTF-8"')).toBeLessThan(
       1024,
     );
-    await expect(page).toHaveTitle("Orbita — Interactive 3D Solar System");
+    await expect(page).toHaveTitle("Orbita — Solar System and Milky Way in 3D");
     await expect(page.locator('head meta[name="description"]')).toHaveCount(1);
     await expect(page.locator('meta[name="description"]')).toHaveAttribute(
       "content",
-      "Explore the Sun and all eight planets in an interactive 3D Solar System. Fly between worlds, control the simulation and discover facts from NASA.",
+      "Explore the Solar System and Milky Way in 3D. Fly between planets, find our place in the galaxy and discover facts from NASA.",
     );
     await expect(page.locator('link[rel="canonical"]')).toHaveCount(1);
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
@@ -28,7 +28,7 @@ test("serves complete search and social metadata in HTML without JavaScript", as
       "index, follow, max-image-preview:large",
     );
     for (const [property, value] of [
-      ["og:title", "Orbita — Interactive 3D Solar System"],
+      ["og:title", "Orbita — Solar System and Milky Way in 3D"],
       ["og:url", canonical],
       ["og:site_name", "Orbita"],
       ["og:image", `${canonical}og-image.png`],
@@ -53,7 +53,7 @@ test("serves complete search and social metadata in HTML without JavaScript", as
     });
     await expect(
       page.getByRole("heading", {
-        name: "Orbita — Interactive 3D Solar System",
+        name: "Orbita — Solar System and Milky Way in 3D",
       }),
     ).toBeVisible();
     await expect(page.getByText(/Enable JavaScript/)).toBeVisible();
@@ -93,10 +93,10 @@ test("keeps canonical stable while translating metadata with the language prefer
   await page.goto("/?fallback=1");
   const picker = page.getByRole("combobox", { name: "Language / Język" });
   await picker.selectOption("pl");
-  await expect(page).toHaveTitle("Orbita — interaktywny Układ Słoneczny 3D");
+  await expect(page).toHaveTitle("Orbita — Układ Słoneczny i Droga Mleczna 3D");
   await expect(page.locator('meta[name="description"]')).toHaveAttribute(
     "content",
-    /Słońce i osiem planet/,
+    /Układ Słoneczny i Drogę Mleczną/,
   );
   await expect(page.locator('meta[property="og:locale"]')).toHaveAttribute(
     "content",
@@ -104,11 +104,11 @@ test("keeps canonical stable while translating metadata with the language prefer
   );
   await expect(page.locator('meta[property="og:title"]')).toHaveAttribute(
     "content",
-    "Orbita — interaktywny Układ Słoneczny 3D",
+    "Orbita — Układ Słoneczny i Droga Mleczna 3D",
   );
   await expect(page.locator('meta[name="twitter:title"]')).toHaveAttribute(
     "content",
-    "Orbita — interaktywny Układ Słoneczny 3D",
+    "Orbita — Układ Słoneczny i Droga Mleczna 3D",
   );
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
     "href",
@@ -121,7 +121,7 @@ test("keeps canonical stable while translating metadata with the language prefer
   );
   await expect(page.locator('meta[property="og:title"]')).toHaveAttribute(
     "content",
-    "Orbita — Interactive 3D Solar System",
+    "Orbita — Solar System and Milky Way in 3D",
   );
   await expect(page.locator('meta[property="og:description"]')).toHaveAttribute(
     "content",

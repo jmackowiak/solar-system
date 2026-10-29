@@ -16,6 +16,8 @@ import type { Language } from "./i18n";
 import { control, initialSimulation } from "./lib/simulation";
 import type { Quality } from "./scene/types";
 import Icon from "./Icon";
+import GalaxyPanel, { GalaxyFallback } from "./GalaxyPanel";
+import type { ViewMode } from "./scene/types";
 const SolarScene = lazy(() => import("./scene/SolarScene"));
 const polishStops = [
   {
@@ -80,6 +82,7 @@ export default function App() {
       ),
     [language],
   );
+  const [mode, setMode] = useState<ViewMode>("solar");
   const stops = language === "en" ? englishTourStops : polishStops;
   const [reduced, setReduced] = useState(
     () => matchMedia("(prefers-reduced-motion: reduce)").matches,
@@ -114,14 +117,14 @@ export default function App() {
     let last = performance.now();
     const id = setInterval(() => {
       const now = performance.now();
-      if (fallback && !hidden && !simulation.current.paused)
+      if (fallback && mode === "solar" && !hidden && !simulation.current.paused)
         simulation.current.days +=
           ((now - last) / 1000) * simulation.current.speed;
       last = now;
       setDays(simulation.current.days);
     }, 200);
     return () => clearInterval(id);
-  }, [fallback, hidden]);
+  }, [fallback, hidden, mode]);
   useEffect(() => {
     const onVisibility = () => setHidden(document.hidden);
     document.addEventListener("visibilitychange", onVisibility);
@@ -140,6 +143,7 @@ export default function App() {
     return () => m.removeEventListener("change", change);
   }, []);
   const select = useCallback((id: string) => {
+    setMode("solar");
     lastTrigger.current = document.querySelector<HTMLElement>(
       `.object-nav button[data-body-id="${id}"]`,
     );
@@ -148,6 +152,7 @@ export default function App() {
     setCollapsed(false);
   }, []);
   const home = useCallback(() => {
+    setMode("solar");
     setSelected(null);
     setNavigation((n) => n + 1);
     setTour(null);
@@ -168,6 +173,7 @@ export default function App() {
         } else home();
       }
       if (
+        mode === "solar" &&
         e.code === "Space" &&
         (e.target === document.body || e.target instanceof HTMLCanvasElement)
       ) {
@@ -180,7 +186,7 @@ export default function App() {
     };
     window.addEventListener("keydown", key);
     return () => window.removeEventListener("keydown", key);
-  }, [about, settings, home]);
+  }, [about, settings, home, mode]);
   useEffect(() => {
     if (about) aboutDialog.current?.showModal();
     else aboutDialog.current?.close();
@@ -213,6 +219,23 @@ export default function App() {
       setPaused(true);
     }
   };
+  const switchMode = (next: ViewMode) => {
+    if (mode !== next && !fallback) setReady(false);
+    setMode(next);
+    setSelected(null);
+    setTour(null);
+    setSettings(false);
+    setCollapsed(false);
+    setNavigation((n) => n + 1);
+  };
+  const enterSolar = useCallback(() => {
+    if (!fallback) setReady(false);
+    setMode("solar");
+    setSelected(null);
+    setTour(null);
+    setCollapsed(false);
+    setNavigation((n) => n + 1);
+  }, [fallback]);
   const reset = () => {
     simulation.current = initialSimulation(reduced);
     setDays(0);
@@ -230,13 +253,14 @@ export default function App() {
     }).format(n);
   return (
     <main
-      className={`app ${body ? "has-selection" : ""} ${reduced ? "reduced" : ""}`}
+      className={`app ${body || mode === "galaxy" ? "has-selection" : ""} ${mode === "galaxy" ? "galaxy-mode" : "solar-mode"} ${reduced ? "reduced" : ""}`}
     >
       <div
         className="space"
         data-testid="scene"
         data-ready={ready ? "true" : "false"}
-        data-target={selected || "overview"}
+        data-mode={mode}
+        data-target={mode === "galaxy" ? "galaxy" : selected || "overview"}
         data-flight="false"
         data-frames="0"
         data-draws="0"
@@ -252,6 +276,8 @@ export default function App() {
               }
             >
               <SolarScene
+                mode={mode}
+                onEnterSolar={enterSolar}
                 language={language}
                 simulation={simulation}
                 selected={selected}
@@ -270,6 +296,8 @@ export default function App() {
               />
             </Suspense>
           </SceneBoundary>
+        ) : mode === "galaxy" ? (
+          <GalaxyFallback language={language} onEnter={enterSolar} />
         ) : (
           <div className="fallback" data-testid="fallback">
             <div className="flat-system">
@@ -311,13 +339,19 @@ export default function App() {
             </div>
           </div>
         )}
+        <div className="scale-flight-label">{t("Zmiana skali")}</div>
       </div>
       <div className="vignette" aria-hidden="true" />
       <header className="topbar">
         <a className="brand" href="/" aria-label={t("Orbita — strona główna")}>
           <Icon name="orbit" size={33} />
           <span>
-            ORBITA<small>{t("ATLAS UKŁADU SŁONECZNEGO")}</small>
+            ORBITA
+            <small>
+              {mode === "galaxy"
+                ? t("ATLAS DROGI MLECZNEJ")
+                : t("ATLAS UKŁADU SŁONECZNEGO")}
+            </small>
           </span>
         </a>
         <div className="top-actions">
@@ -359,6 +393,20 @@ export default function App() {
           </button>
         </div>
       </header>
+      <nav className="mode-switch" aria-label={t("Skala eksploracji")}>
+        <button
+          aria-pressed={mode === "solar"}
+          onClick={() => switchMode("solar")}
+        >
+          {t("Układ Słoneczny")}
+        </button>
+        <button
+          aria-pressed={mode === "galaxy"}
+          onClick={() => switchMode("galaxy")}
+        >
+          {t("Droga Mleczna")}
+        </button>
+      </nav>
       <nav className="object-nav" aria-label={t("Obiekty Układu Słonecznego")}>
         <span className="eyebrow nav-heading">{t("ODKRYWAJ")}</span>
         {bodies.map((b, i) => (
@@ -389,7 +437,7 @@ export default function App() {
           {t("NIESKOŃCZONA CIEKAWOŚĆ.")}
         </span>
       </nav>
-      {!body && (
+      {!body && mode === "solar" && (
         <section className="intro">
           <div className="eyebrow">
             <span className="tiny-cross">+</span>{" "}
@@ -409,9 +457,16 @@ export default function App() {
             {t("Rozpocznij podróż")}
             <Icon name="arrow" />
           </button>
+          <button
+            className="galaxy-discover"
+            onClick={() => switchMode("galaxy")}
+          >
+            {t("Gdzie jesteśmy w galaktyce?")}
+            <Icon name="arrow" size={14} />
+          </button>
         </section>
       )}
-      {!body && (
+      {!body && mode === "solar" && (
         <aside className="overview-note">
           <span className="eyebrow">{t("UKŁAD SŁONECZNY")}</span>
           <p>
@@ -429,11 +484,13 @@ export default function App() {
       <div className="scene-tools">
         <button
           className="tool-button"
-          onClick={home}
-          aria-label={t("Cały układ")}
+          onClick={mode === "galaxy" ? () => setNavigation((n) => n + 1) : home}
+          aria-label={mode === "galaxy" ? t("Przywróć widok") : t("Cały układ")}
         >
           <Icon name="home" />
-          <span>{t("Cały układ")}</span>
+          <span>
+            {mode === "galaxy" ? t("Przywróć widok") : t("Cały układ")}
+          </span>
         </button>
         <button
           ref={settingsButton}
@@ -461,14 +518,16 @@ export default function App() {
               <Icon name="close" />
             </button>
           </div>
-          <label className="switch-row">
-            {t("Orbity")}
-            <input
-              type="checkbox"
-              checked={orbits}
-              onChange={(e) => setOrbits(e.target.checked)}
-            />
-          </label>
+          {mode === "solar" && (
+            <label className="switch-row">
+              {t("Orbity")}
+              <input
+                type="checkbox"
+                checked={orbits}
+                onChange={(e) => setOrbits(e.target.checked)}
+              />
+            </label>
+          )}
           <label className="switch-row">
             {t("Etykiety")}
             <input
@@ -497,7 +556,15 @@ export default function App() {
           </p>
         </section>
       )}
-      {body && (
+      {mode === "galaxy" && (
+        <GalaxyPanel
+          language={language}
+          onEnter={enterSolar}
+          collapsed={collapsed}
+          onCollapse={() => setCollapsed((v) => !v)}
+        />
+      )}
+      {body && mode === "solar" && (
         <section
           className={`object-panel ${collapsed ? "collapsed" : ""}`}
           aria-label={t("Informacje o obiekcie")}
@@ -632,82 +699,105 @@ export default function App() {
           </div>
         </section>
       )}
-      <footer className="bottom-ui">
-        <div className="control-hint">
-          <span className="mouse-symbol" />
-          {t("Przeciągnij, aby obrócić")}
-          <span>·</span>
-          {t("Przewiń, aby przybliżyć")}
-          <span>·</span>
-          {t("Kliknij planetę")}
-        </div>
-        <section className="simulation" aria-label={t("Sterowanie symulacją")}>
-          <button
-            className="play-button"
-            onClick={togglePause}
-            aria-label={
-              paused ? t("Wznów symulację") : t("Wstrzymaj symulację")
-            }
-          >
-            <Icon name={paused ? "play" : "pause"} size={19} />
-          </button>
-          <div className="sim-time">
-            <span className="eyebrow">
-              {paused ? t("CZAS WSTRZYMANY") : t("CZAS SYMULACJI")}
-            </span>
-            <output data-testid="simulation-time">
-              {format(days)} <span>{t("dni")}</span>
-            </output>
+      {mode === "galaxy" ? (
+        <footer className="galaxy-footer">
+          <div className="control-hint">
+            {t("Przeciągnij, aby obrócić")}
+            <span>·</span>
+            {t("Przewiń, aby przybliżyć")}
+            <span>·</span>
+            {t("Wybierz nasz Układ Słoneczny")}
           </div>
-          <div className="speed-control">
-            <div>
-              <label htmlFor="speed">{t("TEMPO PODRÓŻY")}</label>
-              <output>
-                {speed} <span>{t("dni / s")}</span>
+          <p>{t("Model galaktyki — położenia i struktura przybliżone")}</p>
+          <small>
+            {t(
+              "Widok galaktyki jest statyczny. Czas symulacji planet jest zachowany do powrotu.",
+            )}
+          </small>
+        </footer>
+      ) : (
+        <footer className="bottom-ui">
+          <div className="control-hint">
+            <span className="mouse-symbol" />
+            {t("Przeciągnij, aby obrócić")}
+            <span>·</span>
+            {t("Przewiń, aby przybliżyć")}
+            <span>·</span>
+            {t("Kliknij planetę")}
+          </div>
+          <section
+            className="simulation"
+            aria-label={t("Sterowanie symulacją")}
+          >
+            <button
+              className="play-button"
+              onClick={togglePause}
+              aria-label={
+                paused ? t("Wznów symulację") : t("Wstrzymaj symulację")
+              }
+            >
+              <Icon name={paused ? "play" : "pause"} size={19} />
+            </button>
+            <div className="sim-time">
+              <span className="eyebrow">
+                {paused ? t("CZAS WSTRZYMANY") : t("CZAS SYMULACJI")}
+              </span>
+              <output data-testid="simulation-time">
+                {format(days)} <span>{t("dni")}</span>
               </output>
             </div>
-            <input
-              id="speed"
-              aria-label={t("Szybkość symulacji")}
-              type="range"
-              min="0"
-              max="100"
-              step="1"
-              value={speed}
-              onChange={(e) => {
-                const value = Number(e.target.value);
-                setSpeed(value);
-                simulation.current = control(simulation.current, {
-                  type: "speed",
-                  value,
-                });
-              }}
-            />
+            <div className="speed-control">
+              <div>
+                <label htmlFor="speed">{t("TEMPO PODRÓŻY")}</label>
+                <output>
+                  {speed} <span>{t("dni / s")}</span>
+                </output>
+              </div>
+              <input
+                id="speed"
+                aria-label={t("Szybkość symulacji")}
+                type="range"
+                min="0"
+                max="100"
+                step="1"
+                value={speed}
+                onChange={(e) => {
+                  const value = Number(e.target.value);
+                  setSpeed(value);
+                  simulation.current = control(simulation.current, {
+                    type: "speed",
+                    value,
+                  });
+                }}
+              />
+            </div>
+            <button
+              className="round-button reset"
+              aria-label={t("Resetuj symulację")}
+              title={t("Reset: dzień 0, 8 dni/s, widok całego układu")}
+              onClick={reset}
+            >
+              <Icon name="reset" />
+            </button>
+          </section>
+          <div className="bottom-caption">
+            <span>
+              <i /> {t("SYMULACJA POGLĄDOWA · ORBITY PRZYBLIŻONE")}
+            </span>
+            <span>
+              {t(
+                "Widok poglądowy — rozmiary i odległości nie zachowują wspólnej skali",
+              )}
+            </span>
+            <span className="coordinates">SOL / 01</span>
           </div>
-          <button
-            className="round-button reset"
-            aria-label={t("Resetuj symulację")}
-            title={t("Reset: dzień 0, 8 dni/s, widok całego układu")}
-            onClick={reset}
-          >
-            <Icon name="reset" />
-          </button>
-        </section>
-        <div className="bottom-caption">
-          <span>
-            <i /> {t("SYMULACJA POGLĄDOWA · ORBITY PRZYBLIŻONE")}
-          </span>
-          <span>
-            {t(
-              "Widok poglądowy — rozmiary i odległości nie zachowują wspólnej skali",
-            )}
-          </span>
-          <span className="coordinates">SOL / 01</span>
-        </div>
-      </footer>
+        </footer>
+      )}
       {!fallback && !ready && (
         <div className="loading-badge" role="status">
-          {t("Uruchamianie sceny 3D…")}
+          {mode === "galaxy"
+            ? t("Przygotowywanie mapy galaktyki…")
+            : t("Uruchamianie sceny 3D…")}
         </div>
       )}
       {textureErrors > 0 && (
@@ -754,6 +844,11 @@ export default function App() {
         <p>
           {t(
             "Orbita to interaktywny atlas Słońca i ośmiu planet. Obracaj widok przeciągnięciem, przybliżaj kółkiem lub gestem dwóch palców. Na klawiaturze wybieraj obiekty tabulatorem i Enterem. Spacja wstrzymuje czas, Escape przywraca cały układ.",
+          )}
+        </p>
+        <p>
+          {t(
+            "Widok Drogi Mlecznej pokazuje przybliżone położenie Układu Słonecznego. Galaktyka ma osobną skalę i jest statyczną rekonstrukcją; podczas jej oglądania czas symulacji planet jest zachowany.",
           )}
         </p>
         <p>

@@ -16,10 +16,10 @@ test("defaults to English even for a Polish browser and persists an explicit lan
   await expect(
     page.getByRole("button", { name: "Start journey", exact: true }),
   ).toBeVisible();
-  await expect(page).toHaveTitle("Orbita — Interactive 3D Solar System");
+  await expect(page).toHaveTitle("Orbita — Solar System and Milky Way in 3D");
   await expect(page.locator('meta[name="description"]')).toHaveAttribute(
     "content",
-    /Sun and all eight planets/,
+    /Solar System and Milky Way/,
   );
   await picker(page).selectOption("pl");
   await expect(page.locator("html")).toHaveAttribute("lang", "pl");
@@ -28,7 +28,7 @@ test("defaults to English even for a Polish browser and persists an explicit lan
   ).toBeVisible();
   await page.reload();
   await expect(picker(page)).toHaveValue("pl");
-  await expect(page).toHaveTitle("Orbita — interaktywny Układ Słoneczny 3D");
+  await expect(page).toHaveTitle("Orbita — Układ Słoneczny i Droga Mleczna 3D");
   await picker(page).selectOption("en");
   await page.reload();
   await expect(picker(page)).toHaveValue("en");

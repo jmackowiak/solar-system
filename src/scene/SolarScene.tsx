@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Html } from "@react-three/drei";
 import { OrbitControls as Controls } from "three/addons/controls/OrbitControls.js";
@@ -9,6 +9,14 @@ import { translate } from "../i18n";
 import type { Body } from "../data/bodies";
 import { orbitalPosition } from "../lib/simulation";
 import type { SceneProps } from "./types";
+import { solarPosition } from "../lib/galaxy";
+const Galaxy = lazy(() => import("./Galaxy"));
+interface Worlds {
+  solar: React.RefObject<THREE.Group | null>;
+  galaxy: React.RefObject<THREE.Group | null>;
+  blend: { value: number };
+  galaxyReady: React.RefObject<boolean>;
+}
 
 const vertex = `varying vec2 vUv; varying vec3 vNormal; varying vec3 vView;
 void main(){vUv=uv; vec4 p=modelViewMatrix*vec4(position,1.);vNormal=normalize(normalMatrix*normal);vView=-p.xyz;gl_Position=projectionMatrix*p;}`;
@@ -136,7 +144,7 @@ function Planet({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [high, props.selected, body.id, props.textureVersion, invalidate]);
   useFrame(() => {
-    if (!group.current) return;
+    if (props.mode !== "solar" || !group.current) return;
     group.current.position.set(
       ...orbitalPosition(body, props.simulation.current.days),
     );
@@ -165,7 +173,7 @@ function Planet({
           body.id === "uranus" ? 1.7 : body.id === "earth" ? 0.41 : 0.06
         }
         onClick={(e) => {
-          if (e.delta > 5) return;
+          if (props.mode !== "solar" || e.delta > 5) return;
           e.stopPropagation();
           props.onSelect(body.id);
         }}
@@ -191,7 +199,7 @@ function Planet({
       </mesh>
       <mesh
         onClick={(e) => {
-          if (e.delta > 5) return;
+          if (props.mode !== "solar" || e.delta > 5) return;
           e.stopPropagation();
           props.onSelect(body.id);
         }}
@@ -241,7 +249,7 @@ function Planet({
           />
         </mesh>
       )}
-      {props.labels && (
+      {props.mode === "solar" && props.labels && (
         <Html
           portal={portal as React.RefObject<HTMLElement>}
           position={[0, props.selected === body.id ? r * 1.3 : r + 0.7, 0]}
@@ -378,10 +386,33 @@ function Particles({ high }: { high: boolean }) {
     </>
   );
 }
-function Engine({ props, high }: { props: SceneProps; high: boolean }) {
+function Engine({
+  props,
+  high,
+  worlds,
+}: {
+  props: SceneProps;
+  high: boolean;
+  worlds: Worlds;
+}) {
   const controls = useRef<Controls>(null);
   const { camera, invalidate, gl, size, setDpr, scene } = useThree();
   const clockState = useRef(props.simulation.current);
+  const clockMode = useRef(props.mode);
+  const transitionMode = useRef(props.mode);
+  const scaleTransition = useRef<{ from: number; elapsed: number } | null>(
+    null,
+  );
+  const selectedRef = useRef<{ mode: string; radius?: number }>({
+    mode: props.mode,
+  });
+  const manual = useRef(false);
+  useEffect(() => {
+    selectedRef.current = {
+      mode: props.mode,
+      radius: bodies.find((b) => b.id === props.selected)?.displayRadius,
+    };
+  }, [props.mode, props.selected]);
   const onFailure = props.onFailure;
   const started = useRef(false);
   const flight = useRef<{
@@ -403,7 +434,10 @@ function Engine({ props, high }: { props: SceneProps; high: boolean }) {
     }),
     [],
   );
-  const selected = bodies.find((b) => b.id === props.selected);
+  const selected =
+    props.mode === "solar"
+      ? bodies.find((b) => b.id === props.selected)
+      : undefined;
   useEffect(() => {
     const c = new Controls(camera, gl.domElement);
     controls.current = c;
@@ -418,17 +452,28 @@ function Engine({ props, high }: { props: SceneProps; high: boolean }) {
     const change = () => invalidate();
     const start = () => {
       flight.current = null;
+      manual.current = true;
+      lastFrame.current = 0;
       c.maxDistance = Math.max(
         c.getDistance(),
-        selected ? selected.displayRadius * 24 : 420,
+        selectedRef.current.mode === "galaxy"
+          ? 500
+          : selectedRef.current.radius
+            ? selectedRef.current.radius * 24
+            : 420,
       );
       const el = document.querySelector<HTMLElement>('[data-testid="scene"]');
       if (el) el.dataset.flight = "false";
       invalidate();
     };
+    const end = () => {
+      manual.current = false;
+    };
+    c.addEventListener("end", end);
     c.addEventListener("change", change);
     c.addEventListener("start", start);
     return () => {
+      c.removeEventListener("end", end);
       c.removeEventListener("change", change);
       c.removeEventListener("start", start);
       c.dispose();
@@ -440,6 +485,10 @@ function Engine({ props, high }: { props: SceneProps; high: boolean }) {
   useEffect(() => {
     const c = controls.current;
     if (!c) return;
+    if (transitionMode.current !== props.mode) {
+      scaleTransition.current = { from: worlds.blend.value, elapsed: 0 };
+      transitionMode.current = props.mode;
+    }
     const start = new THREE.Vector3(
       ...(selected
         ? orbitalPosition(selected, props.simulation.current.days)
@@ -450,7 +499,7 @@ function Engine({ props, high }: { props: SceneProps; high: boolean }) {
     c.maxDistance = 600;
     c.enableDamping = false;
     c.update();
-    if (!started.current && !selected) {
+    if (!started.current && !selected && props.mode === "solar") {
       started.current = true;
       camera.lookAt(start);
       return;
@@ -467,7 +516,18 @@ function Engine({ props, high }: { props: SceneProps; high: boolean }) {
     invalidate();
     // navigation changes also restart framing for the same object
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [props.selected, props.navigation]);
+  }, [props.mode, props.selected, props.navigation]);
+  useEffect(() => {
+    const c = controls.current;
+    if (props.mode !== "galaxy" || !c || flight.current) return;
+    const fit = Math.max(110, 138 / Math.max(size.width / size.height, 0.2));
+    if (c.getDistance() < fit) {
+      temp.diff.subVectors(camera.position, c.target).setLength(fit);
+      camera.position.copy(c.target).add(temp.diff);
+      c.update();
+      invalidate();
+    }
+  }, [size.width, size.height, props.mode, camera, invalidate, temp]);
   const paused = props.simulation.current.paused;
   const speed = props.simulation.current.speed;
   useEffect(() => {
@@ -495,18 +555,30 @@ function Engine({ props, high }: { props: SceneProps; high: boolean }) {
     return () => canvas.removeEventListener("webglcontextlost", lost);
   }, [gl, onFailure]);
   useEffect(() => {
+    let ready = false;
     const original = scene.onAfterRender;
     scene.onAfterRender = () => {
       const el = document.querySelector<HTMLElement>('[data-testid="scene"]');
+      if (
+        !ready &&
+        gl.info.render.calls > 0 &&
+        (props.mode === "solar" || worlds.galaxyReady.current)
+      ) {
+        ready = true;
+        props.onReady();
+      }
       if (el) {
         el.dataset.draws = String(gl.info.render.calls);
         el.dataset.triangles = String(gl.info.render.triangles);
+        el.dataset.points = String(gl.info.render.points);
       }
     };
     return () => {
       scene.onAfterRender = original;
     };
-  }, [scene, gl]);
+    // readiness is tied to an actual render of the current navigation target
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scene, gl, props.mode, props.navigation, props.onReady]);
   useFrame((state) => {
     if (props.hidden || document.hidden) {
       lastFrame.current = 0;
@@ -514,6 +586,10 @@ function Engine({ props, high }: { props: SceneProps; high: boolean }) {
     }
     // Control actions replace the simulation object. Reset before consuming any elapsed time,
     // including when a demand frame runs before React's passive effects.
+    if (clockMode.current !== props.mode) {
+      lastFrame.current = 0;
+      clockMode.current = props.mode;
+    }
     if (clockState.current !== props.simulation.current) {
       lastFrame.current = 0;
       clockState.current = props.simulation.current;
@@ -523,10 +599,42 @@ function Engine({ props, high }: { props: SceneProps; high: boolean }) {
       dt = Math.min(rawDt, 0.1);
     lastFrame.current = now;
     const sim = props.simulation.current;
-    if (!sim.paused) sim.days += rawDt * sim.speed;
+    if (props.mode === "solar" && !sim.paused) sim.days += rawDt * sim.speed;
+    const scale = scaleTransition.current;
+    if (scale) {
+      scale.elapsed += dt;
+      const progress = props.reduced ? 1 : Math.min(scale.elapsed / 1.65, 1),
+        ease = progress * progress * (3 - 2 * progress);
+      worlds.blend.value = THREE.MathUtils.lerp(
+        scale.from,
+        props.mode === "galaxy" ? 1 : 0,
+        ease,
+      );
+      if (progress === 1) scaleTransition.current = null;
+    }
+    const blend = worlds.blend.value,
+      solarScale = Math.exp(-blend * 11.5);
+    if (worlds.solar.current) {
+      worlds.solar.current.visible = blend < 0.99999;
+      worlds.solar.current.scale.setScalar(solarScale);
+      worlds.solar.current.position.set(
+        solarPosition[0] * blend,
+        0,
+        solarPosition[2] * blend,
+      );
+    }
+    if (worlds.galaxy.current) worlds.galaxy.current.visible = blend > 0.00001;
+
     const c = controls.current;
     if (!c) return;
-    if (selected) temp.pos.set(...orbitalPosition(selected, sim.days));
+    if (selected) {
+      temp.pos
+        .set(...orbitalPosition(selected, sim.days))
+        .multiplyScalar(solarScale);
+      temp.pos.x += solarPosition[0] * blend;
+      temp.pos.z += solarPosition[2] * blend;
+    } else if (props.mode === "solar")
+      temp.pos.set(solarPosition[0] * blend, 0, solarPosition[2] * blend);
     else temp.pos.set(0, 0, 0);
     const f = flight.current;
     if (f) {
@@ -542,6 +650,12 @@ function Engine({ props, high }: { props: SceneProps; high: boolean }) {
           temp.pos.y + r * 2.3,
           temp.pos.z + Math.sin(angle) * d,
         );
+      } else if (props.mode === "galaxy") {
+        const fit = Math.max(
+          110,
+          138 / Math.max(size.width / size.height, 0.2),
+        );
+        temp.dest.set(0.326 * fit, 0.632 * fit, 0.707 * fit);
       } else {
         const d = size.width < 700 ? 280 : 100;
         temp.dest.set(d * 0.35, d * 0.65, d * 0.82);
@@ -554,10 +668,18 @@ function Engine({ props, high }: { props: SceneProps; high: boolean }) {
       camera.lookAt(c.target);
       if (t === 1) {
         flight.current = null;
-        c.minDistance = selected
-          ? selected.displayRadius * (selected.id === "saturn" ? 2.6 : 1.6)
-          : 5;
-        c.maxDistance = selected ? selected.displayRadius * 24 : 420;
+        c.minDistance =
+          props.mode === "galaxy"
+            ? 35
+            : selected
+              ? selected.displayRadius * (selected.id === "saturn" ? 2.6 : 1.6)
+              : 5;
+        c.maxDistance =
+          props.mode === "galaxy"
+            ? 500
+            : selected
+              ? selected.displayRadius * 24
+              : 420;
         c.update();
         c.enableDamping = !props.reduced;
       }
@@ -569,25 +691,30 @@ function Engine({ props, high }: { props: SceneProps; high: boolean }) {
     } else c.update();
     following.current.copy(temp.pos);
     // Guard all surfaces, including when flying past a different object.
-    for (const b of bodies) {
-      temp.look.set(...orbitalPosition(b, sim.days));
-      temp.diff.subVectors(camera.position, temp.look);
-      const min = b.displayRadius * (b.id === "saturn" ? 2.45 : 1.25);
-      if (temp.diff.length() < min) {
-        temp.diff.setLength(min);
-        camera.position.copy(temp.look).add(temp.diff);
+    if (props.mode === "solar" && blend < 0.0001)
+      for (const b of bodies) {
+        temp.look.set(...orbitalPosition(b, sim.days));
+        temp.diff.subVectors(camera.position, temp.look);
+        const min = b.displayRadius * (b.id === "saturn" ? 2.45 : 1.25);
+        if (temp.diff.length() < min) {
+          temp.diff.setLength(min);
+          camera.position.copy(temp.look).add(temp.diff);
+        }
       }
-    }
     frames.current++;
     const el = document.querySelector<HTMLElement>('[data-testid="scene"]');
     if (el) {
+      el.dataset.mode = props.mode;
+      el.dataset.scaleFlight = String(!!scaleTransition.current);
+      el.dataset.galaxyBlend = String(blend);
       el.dataset.quality = high ? "high" : "low";
       el.dataset.pixelRatio = String(gl.getPixelRatio());
 
       el.dataset.frames = String(frames.current);
       el.dataset.days = String(sim.days);
       el.dataset.flight = String(!!flight.current);
-      el.dataset.target = props.selected || "overview";
+      el.dataset.target =
+        props.mode === "galaxy" ? "galaxy" : props.selected || "overview";
 
       el.dataset.camera = camera.position
         .toArray()
@@ -598,9 +725,14 @@ function Engine({ props, high }: { props: SceneProps; high: boolean }) {
         el.dataset.projected = temp.look.toArray().join(",");
       }
     }
-    if (frames.current === 2) props.onReady();
+
     const s = sample.current;
-    if (rawDt > 0 && !sim.paused) {
+    if (
+      rawDt > 0 &&
+      ((props.mode === "solar" && !sim.paused) ||
+        flight.current ||
+        manual.current)
+    ) {
       s.elapsed += rawDt;
       s.frames++;
       if (s.elapsed > 2) {
@@ -615,12 +747,38 @@ function Engine({ props, high }: { props: SceneProps; high: boolean }) {
         s.frames = 0;
       }
     }
-    if ((!sim.paused && sim.speed > 0) || flight.current) state.invalidate();
+    if (
+      (props.mode === "solar" && !sim.paused && sim.speed > 0) ||
+      flight.current ||
+      scaleTransition.current
+    )
+      state.invalidate();
   });
   return null;
 }
 export default function SolarScene(props: SceneProps) {
   const portal = useRef<HTMLDivElement>(null);
+  const solarWorld = useRef<THREE.Group>(null),
+    galaxyWorld = useRef<THREE.Group>(null),
+    galaxyReady = useRef(false);
+  const blend = useRef({ value: props.mode === "galaxy" ? 1 : 0 }).current;
+  const worlds = useMemo<Worlds>(
+    () => ({ solar: solarWorld, galaxy: galaxyWorld, blend, galaxyReady }),
+    [blend],
+  );
+  const [keepGalaxy, setKeepGalaxy] = useState(false);
+  useEffect(() => {
+    if (props.mode === "galaxy") setKeepGalaxy(true);
+  }, [props.mode]);
+  const invalidateGal = useRef<() => void>(() => {});
+  const onGalaxyReady = useMemo(
+    () => () => {
+      galaxyReady.current = true;
+      invalidateGal.current();
+    },
+    [],
+  );
+
   const [auto, setAuto] = useState<"low" | "high">(() =>
     window.innerWidth < 700 ? "low" : "high",
   );
@@ -635,10 +793,16 @@ export default function SolarScene(props: SceneProps) {
   return (
     <>
       <Canvas
-        aria-label={translate(
-          props.language,
-          "Interaktywny Układ Słoneczny 3D",
-        )}
+        aria-label={
+          props.mode === "galaxy"
+            ? props.language === "en"
+              ? "Interactive 3D Milky Way"
+              : "Interaktywna Droga Mleczna 3D"
+            : translate(props.language, "Interaktywny Układ Słoneczny 3D")
+        }
+        onCreated={(state) => {
+          invalidateGal.current = state.invalidate;
+        }}
         camera={{
           position: window.innerWidth < 700 ? [98, 182, 230] : [35, 65, 82],
           fov: 46,
@@ -659,33 +823,55 @@ export default function SolarScene(props: SceneProps) {
         }
       >
         <ambientLight intensity={0.24} />
-        <pointLight
-          position={[0, 0, 0]}
-          color="#fff2df"
-          intensity={3.2}
-          decay={0}
+        <Engine
+          props={{ ...props, onQuality: quality }}
+          high={high}
+          worlds={worlds}
         />
-        <Engine props={{ ...props, onQuality: quality }} high={high} />
-        <Particles high={high} />
-        {props.orbits &&
-          bodies
-            .slice(1)
-            .map((body) => (
-              <Orbit
-                key={body.id}
-                body={body}
-                selected={props.selected === body.id}
-              />
-            ))}
-        {bodies.map((body) => (
-          <Planet
-            key={body.id}
-            body={body}
-            props={props}
-            high={high}
-            portal={portal}
+        <group ref={solarWorld}>
+          <pointLight
+            position={[0, 0, 0]}
+            color="#fff2df"
+            intensity={3.2}
+            decay={0}
           />
-        ))}
+
+          <Particles high={high} />
+          {props.orbits &&
+            bodies
+              .slice(1)
+              .map((body) => (
+                <Orbit
+                  key={body.id}
+                  body={body}
+                  selected={props.selected === body.id}
+                />
+              ))}
+          {bodies.map((body) => (
+            <Planet
+              key={body.id}
+              body={body}
+              props={props}
+              high={high}
+              portal={portal}
+            />
+          ))}
+        </group>
+        <group ref={galaxyWorld} visible={false}>
+          {(props.mode === "galaxy" || keepGalaxy) && (
+            <Suspense fallback={null}>
+              <Galaxy
+                high={high}
+                language={props.language}
+                onEnter={props.onEnterSolar}
+                labels={props.mode === "galaxy" && props.labels}
+                portal={portal}
+                fade={blend}
+                onReady={onGalaxyReady}
+              />
+            </Suspense>
+          )}
+        </group>
       </Canvas>
       <div ref={portal} className="labels-layer" />
     </>

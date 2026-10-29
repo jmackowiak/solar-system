@@ -145,3 +145,32 @@ Open Graph i Twitter używają własnego obrazu `public/og-image.png`; JSON-LD
 `WebSite` podaje nazwę Orbita. Wersja bez JavaScriptu zawiera opis i instrukcję
 uruchomienia atlasu. Google sam wybiera ostateczny tytuł i fragment wyniku;
 metadane nie gwarantują indeksacji ani konkretnego wyglądu wyniku.
+
+## Droga Mleczna
+
+Przełącznik **Solar System / Milky Way** (po polsku **Układ Słoneczny / Droga
+Mleczna**) zmienia skalę eksploracji. Znacznik **You are here / Jesteś tutaj**
+pokazuje przybliżone położenie Słońca w Ostrodze Oriona. Kliknięcie znacznika
+lub **Enter Solar System** przywraca widok planet. Oba poziomy używają jednego
+Canvas i wspólnego sterowania kamerą; przeciągnięcie przerywa przelot kamery.
+
+Galaktyka jest statyczną rekonstrukcją — podczas jej oglądania licznik dni planet
+nie biegnie. Powrót zachowuje szybkość i stan pauzy. Osobne skale są jawnie
+opisane; nie traktujemy modelu jako katalogu rzeczywistych pozycji gwiazd.
+Źródła i uproszczenia: [docs/GALAXY.md](docs/GALAXY.md). Przy braku WebGL dostępna
+jest także mapa galaktyki 2D. Ograniczenie ruchu zastępuje przejście zmianą widoku.
+
+Wysoka jakość: 35 000 punktów gwiazd i 3600 poświaty; niska: 12 000 i 1100.
+Rozkład jest deterministyczny, bez pobierania zewnętrznych katalogów/tekstur.
+Moduł galaktyki wczytuje się dopiero po jego wybraniu. Po zakończeniu przejścia
+scena renderuje tylko podczas interakcji. W pamięci zachowujemy oba poziomy,
+żeby kolejne zmiany skali nie wczytywały ponownie tekstur planet.
+
+Pomiar interakcji (lokalny produkcyjny podgląd na 4174):
+
+```sh
+HEADED=1 node scripts/measure-galaxy.mjs
+```
+
+Skrypt mierzy obrót i przejścia, a w spoczynku sprawdza brak zbędnych klatek.
+Emulacja 390×844 na komputerze nie potwierdza wydajności fizycznego telefonu.

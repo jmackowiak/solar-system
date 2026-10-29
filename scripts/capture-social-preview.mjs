@@ -23,6 +23,15 @@ try {
   await page.waitForFunction(() =>
     document.querySelector(".sr-only")?.textContent.includes("8 surface maps"),
   );
+  if (process.env.ORBITA_SOCIAL_MODE === "galaxy") {
+    await page.getByRole("button", { name: "Milky Way", exact: true }).click();
+    await page.waitForFunction(() => {
+      const d = document.querySelector('[data-testid="scene"]').dataset;
+      return (
+        d.galaxyBlend === "1" && d.ready === "true" && d.flight === "false"
+      );
+    });
+  }
   await page.evaluate(() => document.fonts.ready);
   await page.screenshot({ path: "public/og-image.png" });
 } finally {
