@@ -133,3 +133,15 @@ Weryfikacja samych wersji językowych na wdrożonej stronie:
 ```sh
 PLAYWRIGHT_BASE_URL=https://solar-system-six-opal.vercel.app npx playwright test tests/language.spec.ts
 ```
+
+## Metadane i indeksowanie
+
+Tytuły i opisy EN/PL oraz główny adres są w `src/seo.ts`. Plugin Vite
+`scripts/seo-plugin.ts` wpisuje angielskie metadane do gotowego HTML bez
+uruchamiania JavaScriptu oraz generuje `robots.txt` i `sitemap.xml`.
+Jeden publiczny adres ma jeden canonical. Polski to preferencja interfejsu,
+nie oddzielny adres językowy, dlatego nie deklarujemy fikcyjnych `hreflang`.
+Open Graph i Twitter używają własnego obrazu `public/og-image.png`; JSON-LD
+`WebSite` podaje nazwę Orbita. Wersja bez JavaScriptu zawiera opis i instrukcję
+uruchomienia atlasu. Google sam wybiera ostateczny tytuł i fragment wyniku;
+metadane nie gwarantują indeksacji ani konkretnego wyglądu wyniku.

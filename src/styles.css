@@ -1841,3 +1841,18 @@ h1 > span {
     margin-top: 3px;
   }
 }
+.no-js-atlas {
+  max-width: 640px;
+  margin: 10vh auto;
+  padding: 24px;
+  line-height: 1.8;
+  color: #d1d8dd;
+  font-family: system-ui, sans-serif;
+}
+.no-js-atlas h1 {
+  font-size: 32px;
+}
+.no-js-atlas a {
+  color: var(--accent);
+  text-decoration: underline;
+}

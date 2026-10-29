@@ -127,3 +127,26 @@ Weryfikacja lokalna zmiany językowej: typy, lint i build bez błędów;
 Dwa scenariusze dotykowe są pomijane wyłącznie w projekcie desktopowym;
 w projekcie mobilnym przechodzą. Konfiguracja Playwright obsługuje
 `PLAYWRIGHT_BASE_URL`, aby te same scenariusze językowe uruchamiać na live.
+
+## Metadane wyszukiwarki — 29 października 2026
+
+W `src/seo.ts` ujednolicono tytuły i opisy EN/PL. Angielski opis zawiera
+145 znaków, polski 146; jest to wybór redakcyjny, nie gwarantowany limit Google.
+Metadane są wpisywane podczas budowania do HTML, a przełącznik języka aktualizuje
+również Open Graph i Twitter. Główny canonical pozostaje niezmienny, także dla
+`?fallback=1`. Dodano `WebSite` JSON-LD, robots.txt, sitemap.xml (jeden rzeczywisty
+adres) i własny obraz 1200×630. Nie deklarujemy fikcyjnych stron językowych,
+ocen ani afiliacji z NASA. Bez JavaScriptu dostępny jest krótki opis atlasu.
+
+Typy, lint, produkcyjny build i 11 testów jednostkowych przeszły. Osiem testów
+językowych sprawdziło nowy tytuł/opis i zachowanie aplikacji. Sześć dodatkowych
+scenariuszy SEO sprawdza gotowy HTML bez JS, canonical, robots, sitemapę,
+strukturalną nazwę witryny, wymiary/dostępność obrazu i przełączanie metadanych.
+Weryfikacja dotyczy technicznej poprawności. Nie stanowi potwierdzenia indeksacji,
+pozycji ani ostatecznego fragmentu wybranego przez Google.
+
+Podstawa decyzji: dokumentacja Google Search Central:
+[opisy wyników](https://developers.google.com/search/docs/appearance/snippet),
+[tytuły](https://developers.google.com/search/docs/appearance/title-link),
+[nazwa witryny](https://developers.google.com/search/docs/appearance/site-names),
+[JavaScript SEO](https://developers.google.com/search/docs/crawling-indexing/javascript/javascript-seo-basics).

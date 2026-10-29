@@ -40,3 +40,11 @@ DM Sans i Manrope: pliki zmienne TTF z oficjalnego repozytorium Google Fonts,
 https://github.com/google/fonts/tree/main/ofl/dmsans oraz
 https://github.com/google/fonts/tree/main/ofl/manrope. Licencja SIL Open Font License 1.1;
 pełne teksty w `public/fonts/*-OFL.txt`. Fonty są serwowane lokalnie, bez Google Fonts API.
+
+## Obraz podglądu linku
+
+`public/og-image.png` (1200×630) to zrzut własnej aplikacji Orbita w angielskiej
+wersji, z zatrzymaną symulacją w dniu 0. Wykorzystuje opisane wyżej lokalne mapy
+planet i fonty; nie pobiera dodatkowych cudzych ilustracji. Służy jako obraz
+Open Graph / Twitter. Regeneracja: uruchom produkcyjny podgląd na porcie 4174,
+a następnie `node scripts/capture-social-preview.mjs`.

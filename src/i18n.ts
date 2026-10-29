@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { applySeo } from "./seo";
 export type Language = "en" | "pl";
 const storageKey = "orbita-language";
 export function readLanguage(): Language {
@@ -140,19 +141,7 @@ export function useLanguage() {
     [language],
   );
   useEffect(() => {
-    document.documentElement.lang = language;
-    document.title =
-      language === "en"
-        ? "Orbita — Solar System atlas"
-        : "Orbita — atlas Układu Słonecznego";
-    document
-      .querySelector('meta[name="description"]')
-      ?.setAttribute(
-        "content",
-        language === "en"
-          ? "Orbita — an interactive Solar System atlas. Explore planets in 3D and take control of time."
-          : "Orbita — interaktywny atlas Układu Słonecznego. Odkrywaj planety w 3D i steruj czasem.",
-      );
+    applySeo(language);
   }, [language]);
   return { language, setLanguage, t };
 }
