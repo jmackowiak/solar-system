@@ -93,6 +93,13 @@ peerDependencies. Lokalny skill Fiber celuje w tę samą generację bibliotek,
 jednak jego alias `threeLine` wywoływał błąd przy aktualizacji w Fiber 9.8.2.
 Orbity zrealizowano jako jawne `THREE.Line` ze sprzątaniem geometrii i materiałów.
 
-Brak wdrożenia pod publicznym adresem. Publikacja dotyczy kodu w GitHubie.
+## Wdrożenie produkcyjne — 29 października 2026
+
+https://solar-system-six-opal.vercel.app — publiczny adres produkcyjny Vercel.
+Pierwszy deploy: `dpl_AK9QWmcnihLDKf146oeYCKc8X33t`, stan `READY`.
+Adres bez uwierzytelnienia zwraca HTTP 200 i dokument Orbity. Projekt jest
+połączony z `jmackowiak/solar-system`; kolejne pushe na `main` uruchamiają
+wdrożenie. Konfiguracja `vercel.json` zachowuje Vite, wymusza typowany build
+`npm run build` i publikuje `dist`.
 Stan GitHub Actions jest informacją z bieżącego sprawdzenia w raporcie końcowym;
 nie wpisujemy zmiennego stanu CI do dokumentacji jako gwarancji.

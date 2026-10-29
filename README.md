@@ -1,5 +1,7 @@
 # Orbita
 
+**Wersja produkcyjna: https://solar-system-six-opal.vercel.app**
+
 Polski, interaktywny atlas Układu Słonecznego w 3D. React 19, TypeScript, Vite 8,
 Three.js r186, React Three Fiber 9 i Drei 10. Bez backendu i runtime CDN.
 
@@ -19,8 +21,12 @@ npm run build
 npm run preview -- --port 4173
 ```
 
-Podgląd produkcyjny: http://localhost:4173. Push do repozytorium nie oznacza
-wdrożenia strony. Projekt nie ma skonfigurowanego publicznego hostingu.
+Lokalny podgląd produkcyjny: http://localhost:4173.
+
+Publiczny hosting: [Vercel](https://solar-system-six-opal.vercel.app). Projekt
+`solar-system` jest połączony z repozytorium GitHub; push na `main` uruchamia
+produkcyjne wdrożenie. `vercel.json` wymusza `npm run build` i katalog `dist`.
+Sam push nie potwierdza udanego wdrożenia — sprawdź status Vercel oraz publiczny adres.
 
 ## Sterowanie
 
