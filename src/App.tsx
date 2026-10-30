@@ -20,7 +20,9 @@ import { control, initialSimulation } from "./lib/simulation";
 import type { Quality } from "./scene/types";
 import Icon from "./Icon";
 import ComparisonPanel from "./ComparisonPanel";
-import "./discovery.css";
+import LightPanel from "./LightPanel";
+import LightFallback from "./LightFallback";
+import { advanceLight, type LightClock } from "./lib/light-clock";
 import GalaxyPanel, { GalaxyFallback } from "./GalaxyPanel";
 import type { ViewMode } from "./scene/types";
 const SolarScene = lazy(() => import("./scene/SolarScene"));
@@ -95,6 +97,10 @@ export default function App() {
   const sceneBodies = useMemo(() => [...bodies, ...moonBodies.filter(m => m.parentId === moonParent)], [bodies, moonBodies, moonParent]);
   const [mode, setMode] = useState<ViewMode>("solar");
   const [explore, setExplore] = useState(false);
+  const lightClock=useRef<LightClock>({seconds:0,playing:false,speed:60});
+  const [lightVersion,setLightVersion]=useState(0);
+  const [lightTarget,setLightTarget]=useState("earth");
+  const solarBodies=useMemo(()=>getSystemBodies("solar",language),[language]);
   const [pair, setPair] = useState<[string,string]>(["earth","jupiter"]);
   const comparisonCatalog = useMemo(()=>[...planetarySystems.flatMap(s=>getSystemBodies(s.id,language).slice(1)),...getMoons(language)], [language]);
   const comparison = {left:comparisonCatalog.find(b=>b.id===pair[0])!,right:comparisonCatalog.find(b=>b.id===pair[1])!};
@@ -175,9 +181,10 @@ export default function App() {
     let last = performance.now();
     const id = setInterval(() => {
       const now = performance.now();
-      if (fallback && mode === "solar" && !hidden && !simulation.current.paused)
+      if (fallback && mode === "solar" && !hidden && !document.hidden && !simulation.current.paused)
         simulation.current.days +=
           ((now - last) / 1000) * simulation.current.speed;
+      if (fallback && mode === "light" && !hidden && !document.hidden) advanceLight(lightClock.current,(now-last)/1000);
       last = now;
       setDays(simulation.current.days);
     }, 200);
@@ -192,6 +199,7 @@ export default function App() {
     const m = matchMedia("(prefers-reduced-motion: reduce)");
     const change = () => {
       setReduced(m.matches);
+      if (m.matches) lightClock.current.playing=false;
       if (m.matches) {
         simulation.current = control(simulation.current, { type: "pause" });
         for (const saved of Object.values(savedSimulations.current)) saved.paused = true;
@@ -215,6 +223,7 @@ export default function App() {
   }, [enterMoons, leaveMoons]);
   const home = useCallback(() => {
     leaveMoons();
+    lightClock.current.playing=false;
     setMode("solar");
     setExplore(false);
     setSelected(null);
@@ -291,6 +300,7 @@ export default function App() {
   const toggleReduced = () => {
     const r = !reduced;
     setReduced(r);
+    if (r) lightClock.current.playing=false;
     if (r) {
       simulation.current = control(simulation.current, { type: "pause" });
       for (const saved of Object.values(savedSimulations.current)) saved.paused = true;
@@ -299,8 +309,9 @@ export default function App() {
   };
   const switchMode = (next: ViewMode) => {
     leaveMoons();
-    if (next === "compare") lastTrigger.current = document.querySelector<HTMLButtonElement>(".discovery-trigger");
+    if (next !== "solar" && next !== "galaxy") lastTrigger.current = document.querySelector<HTMLButtonElement>(".discovery-trigger");
     if (mode !== next && !fallback) setReady(false);
+    lightClock.current.playing=false;
     setMode(next);
     setExplore(false);
     setSelected(null);
@@ -329,7 +340,7 @@ export default function App() {
     }).format(n);
   return (
     <main
-      className={`app ${body || mode === "galaxy" ? "has-selection" : ""} ${mode === "galaxy" ? "galaxy-mode" : "solar-mode"} ${!isSolar ? "exoplanet-mode" : ""} ${moonParent ? "moon-mode" : ""} ${mode === "compare" ? "discovery-mode compare-mode" : ""} ${reduced ? "reduced" : ""}`}
+      className={`app ${body || mode === "galaxy" ? "has-selection" : ""} ${mode === "galaxy" ? "galaxy-mode" : "solar-mode"} ${!isSolar ? "exoplanet-mode" : ""} ${moonParent ? "moon-mode" : ""} ${mode !== "solar" && mode !== "galaxy" ? `discovery-mode ${mode}-mode` : ""} ${reduced ? "reduced" : ""}`}
     >
       <div
         className="space"
@@ -358,6 +369,10 @@ export default function App() {
                 bodies={sceneBodies}
                 moonParent={moonParent}
                 comparison={comparison}
+                lightClock={lightClock}
+                lightVersion={lightVersion}
+                lightTarget={lightTarget}
+                solarBodies={solarBodies}
                 starColor={system.starColor}
                 onEnterSolar={enterSolar}
                 language={language}
@@ -378,7 +393,7 @@ export default function App() {
               />
             </Suspense>
           </SceneBoundary>
-        ) : mode === "compare" ? null : mode === "galaxy" ? (
+        ) : mode !== "solar" && mode !== "galaxy" ? null : mode === "galaxy" ? (
           <GalaxyFallback language={language} onEnter={enterSolar} />
         ) : (
           <div className="fallback" data-testid="fallback">
@@ -593,6 +608,8 @@ export default function App() {
           {moonBodies.filter(m=>m.parentId===moonParent).map(m=><button key={m.id} aria-label={`${t("Wybierz")} ${m.name}`} aria-pressed={selected===m.id} onClick={()=>select(m.id)}><span style={{background:m.color}} />{m.name}</button>)}
         </nav>
       )}
+      {mode === "light" && fallback && <LightFallback clock={lightClock} bodies={solarBodies} target={lightTarget} language={language}/>}
+      {mode === "light" && <LightPanel language={language} clock={lightClock} bodies={solarBodies} target={lightTarget} onTarget={setLightTarget} onChange={()=>setLightVersion(v=>v+1)} onClose={home} />}
       {mode === "compare" && <ComparisonPanel language={language} left={comparison.left} right={comparison.right} catalog={comparisonCatalog} onLeft={id=>setPair(p=>[id,p[1]])} onRight={id=>setPair(p=>[p[0],id])} onClose={home} fallback={fallback} />}
       <div className="scene-tools">
         <button className="tool-button discovery-trigger" aria-label={language === "en" ? "Explore tools" : "Narzędzia odkrywania"} aria-expanded={explore} onClick={()=>{setExplore(v=>!v);setSettings(false);}}><Icon name="plus"/><span>{language === "en" ? "Discover" : "Odkrywaj"}</span></button>
@@ -621,7 +638,7 @@ export default function App() {
           <span>{t("Widok")}</span>
         </button>
       </div>
-      {explore && <nav className="discovery-menu" aria-label={language === "en" ? "Discovery tools" : "Narzędzia odkrywania"}><button onClick={()=>switchMode("compare")}>{language === "en" ? "Size comparison" : "Porównanie rozmiarów"}<Icon name="arrow" size={15}/></button></nav>}
+      {explore && <nav className="discovery-menu" aria-label={language === "en" ? "Discovery tools" : "Narzędzia odkrywania"}><button onClick={()=>switchMode("compare")}>{language === "en" ? "Size comparison" : "Porównanie rozmiarów"}<Icon name="arrow" size={15}/></button><button onClick={()=>switchMode("light")}>{language === "en" ? "Light journey" : "Podróż światła"}<Icon name="arrow" size={15}/></button></nav>}
       {settings && (
         <section className="settings-panel" aria-label={t("Ustawienia widoku")}>
           <div className="panel-top">

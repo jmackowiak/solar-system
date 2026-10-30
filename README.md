@@ -69,6 +69,14 @@ Pierścienie nie są wliczane do średnicy bryły; rozmiary egzoplanet pozostaj�
 oszacowaniami obserwacyjnymi. Widok zatrzymuje zegar orbit do powrotu, działa
 również w 2D i nie tworzy drugiego Canvas. [Założenia](docs/COMPARISON.md).
 
+**Discover → Light journey / Podróż światła** pokazuje impuls od Słońca przy
+wspólnej skali średnich odległości. Rozmiary planet są powiększone; planety
+ustawiono w linii dla czytelności, bez związku z aktualną datą. Odtwarzaj,
+wstrzymuj, przewijaj i przechodź do chwili dotarcia do wybranej planety.
+Osobny zegar ma tempo 1 lub 10 minut lotu na sekundę; reset wraca do emisji
+i pauzuje. Główny zegar układu pozostaje zachowany. Prędkość światła i
+przeliczenia: [źródła oraz matematyka](docs/DISCOVERY-DATA.md).
+
 ## Testy
 
 ```sh

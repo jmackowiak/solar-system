@@ -2,8 +2,9 @@ import type { MutableRefObject } from "react";
 import type { Language } from "../i18n";
 import type { Simulation } from "../lib/simulation";
 import type { Body } from "../data/bodies";
+import type { LightClock } from "../lib/light-clock";
 import type { SystemId } from "../data/systems";
-export type ViewMode = "solar" | "galaxy" | "compare";
+export type ViewMode = "solar" | "galaxy" | "compare" | "light";
 export type Quality = "auto" | "low" | "high";
 export interface SceneProps {
   language: Language;
@@ -13,6 +14,10 @@ export interface SceneProps {
   starColor: string;
   moonParent: string | null;
   comparison: { left: Body; right: Body };
+  lightClock: MutableRefObject<LightClock>;
+  lightVersion: number;
+  lightTarget: string;
+  solarBodies: readonly Body[];
   onEnterSolar: () => void;
   simulation: MutableRefObject<Simulation>;
   selected: string | null;

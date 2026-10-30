@@ -6,6 +6,8 @@ import * as THREE from "three";
 import ExoplanetSurface from "./ExoplanetSurface";
 import MoonSurface from "./MoonSurface";
 import Comparison from "./Comparison";
+import LightTravel from "./LightTravel";
+import { advanceLight } from "../lib/light-clock";
 import { comparisonLayout } from "../lib/comparison";
 import { worldPosition } from "../lib/world-position";
 import { translate } from "../i18n";
@@ -506,7 +508,13 @@ function Engine({
   useEffect(() => {
     const c = controls.current;
     if (!c) return;
-    c.enableRotate = props.mode !== "compare";
+    c.enableRotate = props.mode !== "compare" && props.mode !== "light";
+    if (props.mode === "light") {
+      flight.current = null; scaleTransition.current = null; worlds.blend.value=0; transitionMode.current=props.mode;
+      c.enableDamping=false; c.target.set(-1.5,-1.6,0);
+      const fit=Math.max(17,52/Math.max(size.width/size.height,.15))/(2*Math.tan(23*Math.PI/180));
+      camera.position.set(-1.5,-1.6,fit); c.minDistance=fit*.85; c.maxDistance=fit*3; c.update(); invalidate(); return;
+    }
     if (props.mode === "compare") {
       flight.current = null;
       scaleTransition.current = null;
@@ -561,6 +569,10 @@ function Engine({
   }, [props.mode, props.selected, props.navigation]);
   useEffect(() => {
     const c = controls.current;
+    if (props.mode === "light" && c) {
+      const fit=Math.max(17,52/Math.max(size.width/size.height,.15))/(2*Math.tan(23*Math.PI/180));
+      c.target.set(-1.5,-1.6,0); camera.position.set(-1.5,-1.6,fit); c.minDistance=fit*.85; c.maxDistance=fit*3; c.update(); invalidate(); return;
+    }
     if (props.mode === "compare" && c) {
       const layout = comparisonLayout(props.comparison.left.diameterKm, props.comparison.right.diameterKm);
       const fit = Math.max(9, (layout.width + 1.8) / Math.max(size.width / size.height, 0.15)) / (2 * Math.tan(23 * Math.PI / 180));
@@ -576,6 +588,7 @@ function Engine({
       invalidate();
     }
   }, [size.width, size.height, props.mode, props.comparison.left.diameterKm, props.comparison.right.diameterKm, camera, invalidate, temp]);
+  useEffect(()=>{lastFrame.current=0;invalidate();},[props.lightVersion,invalidate]);
   const paused = props.simulation.current.paused;
   const speed = props.simulation.current.speed;
   useEffect(() => {
@@ -619,6 +632,10 @@ function Engine({
         el.dataset.draws = String(gl.info.render.calls);
         el.dataset.triangles = String(gl.info.render.triangles);
         el.dataset.points = String(gl.info.render.points);
+        if(props.mode === "light") {
+          el.dataset.lightSeconds = String(props.lightClock.current.seconds);
+          el.dataset.pulseX = String(scene.getObjectByName("light-pulse")?.position.x);
+        }
       }
     };
     return () => {
@@ -648,6 +665,7 @@ function Engine({
     lastFrame.current = now;
     const sim = props.simulation.current;
     if (props.mode === "solar" && !sim.paused) sim.days += rawDt * sim.speed;
+    if (props.mode === "light") advanceLight(props.lightClock.current, rawDt);
     const scale = scaleTransition.current;
     if (scale) {
       scale.elapsed += dt;
@@ -663,7 +681,7 @@ function Engine({
     const blend = worlds.blend.value,
       solarScale = Math.exp(-blend * 11.5);
     if (worlds.solar.current) {
-      worlds.solar.current.visible = props.mode !== "compare" && blend < 0.99999;
+      worlds.solar.current.visible = (props.mode === "solar" || props.mode === "galaxy") && blend < 0.99999;
       worlds.solar.current.scale.setScalar(solarScale);
       worlds.solar.current.position.set(
         solarPosition[0] * blend,
@@ -671,7 +689,7 @@ function Engine({
         solarPosition[2] * blend,
       );
     }
-    if (worlds.galaxy.current) worlds.galaxy.current.visible = props.mode !== "compare" && blend > 0.00001;
+    if (worlds.galaxy.current) worlds.galaxy.current.visible = (props.mode === "solar" || props.mode === "galaxy") && blend > 0.00001;
 
     const c = controls.current;
     if (!c) return;
@@ -799,7 +817,8 @@ function Engine({
     if (
       (props.mode === "solar" && !sim.paused && sim.speed > 0) ||
       flight.current ||
-      scaleTransition.current
+      scaleTransition.current ||
+      (props.mode === "light" && props.lightClock.current.playing)
     )
       state.invalidate();
   });
@@ -878,6 +897,7 @@ export default function SolarScene(props: SceneProps) {
           high={high}
           worlds={worlds}
         />
+        {props.mode === "light" && <LightTravel clock={props.lightClock} bodies={props.solarBodies} target={props.lightTarget} portal={portal} language={props.language} />}
         {props.mode === "compare" && <Comparison left={props.comparison.left} right={props.comparison.right} high={high} portal={portal} onReady={invalidateGal.current} />}
         <group ref={solarWorld}>
           <pointLight
