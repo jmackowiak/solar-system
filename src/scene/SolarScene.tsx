@@ -6,7 +6,7 @@ import * as THREE from "three";
 import ExoplanetSurface from "./ExoplanetSurface";
 import { translate } from "../i18n";
 import type { Body } from "../data/bodies";
-import { orbitalPosition } from "../lib/simulation";
+import { orbitalPosition, orbitPoint } from "../lib/simulation";
 import type { SceneProps } from "./types";
 import { solarPosition } from "../lib/galaxy";
 const Galaxy = lazy(() => import("./Galaxy"));
@@ -304,6 +304,7 @@ function SaturnRings({ radius }: { radius: number }) {
   );
 }
 function Orbit({ body, selected }: { body: Body; selected: boolean }) {
+  const { orbitRadius, eccentricity, periapsisAngle } = body;
   const line = useMemo(
     () =>
       new THREE.Line(
@@ -311,16 +312,12 @@ function Orbit({ body, selected }: { body: Body; selected: boolean }) {
           Array.from(
             { length: 193 },
             (_, i) =>
-              new THREE.Vector3(
-                Math.cos((i / 192) * Math.PI * 2) * body.orbitRadius,
-                0,
-                Math.sin((i / 192) * Math.PI * 2) * body.orbitRadius,
-              ),
+              new THREE.Vector3(...orbitPoint({ orbitRadius, eccentricity, periapsisAngle }, (i / 192) * Math.PI * 2)),
           ),
         ),
         new THREE.LineBasicMaterial({ transparent: true }),
       ),
-    [body.orbitRadius],
+    [orbitRadius, eccentricity, periapsisAngle],
   );
   useEffect(
     () => () => {

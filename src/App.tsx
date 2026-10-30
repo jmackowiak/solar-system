@@ -899,7 +899,7 @@ export default function App() {
         </p>
         <p>
           {t(
-            "To symulacja poglądowa, bez efemeryd. Pozycje początkowe są umowne. Orbity są kołowe i współpłaszczyznowe; rozmiary i odległości nie zachowują wspólnej skali. Względne okresy obiegu odpowiadają danym NASA, a obroty osiowe są wizualnie spowolnione.",
+            "To symulacja poglądowa, bez efemeryd. Pozycje początkowe są umowne. Orbity planet Układu Słonecznego są elipsami opartymi na parametrach NASA/JPL dla J2000; orbity egzoplanet pozostają kołowym przybliżeniem. Płaszczyzny orbit są uproszczone; rozmiary i odległości nie zachowują wspólnej skali. Względne okresy obiegu odpowiadają danym NASA, a obroty osiowe są wizualnie spowolnione.",
           )}
         </p>
         <p>

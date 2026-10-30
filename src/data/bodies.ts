@@ -1,4 +1,4 @@
-/** NASA/JPL data checked 2026-10-28. Visual dimensions are deliberately not astronomical. */
+/** NASA/JPL physical data checked 2026-10-28; J2000 orbit shapes checked 2026-10-30. */
 export interface Body {
   id: string;
   name: string;
@@ -14,14 +14,20 @@ export interface Body {
   source: string;
   dataSources: readonly string[];
   displayRadius: number;
+  /** Visual semi-major axis, deliberately not a shared astronomical scale. */
   orbitRadius: number;
-  /** Arbitrary initial orbital angle, radians; these are not ephemerides. */
+  /** Elliptical eccentricity; omitted values use the circular approximation. */
+  eccentricity?: number;
+  /** Periapsis direction in the shared X/Z plane, radians from +X towards +Z. */
+  periapsisAngle?: number;
+  /** Arbitrary initial mean anomaly, radians; these are not ephemerides. */
   phase: number;
   color: string;
 }
 
 const physical = "https://ssd.jpl.nasa.gov/planets/phys_par.html";
 const orbital = "https://nssdc.gsfc.nasa.gov/planetary/factsheet/";
+const orbitShapes = "https://ssd.jpl.nasa.gov/planets/approx_pos.html";
 
 export const bodies: Body[] = [
   {
@@ -41,6 +47,8 @@ export const bodies: Body[] = [
     ],
     displayRadius: 3.4,
     orbitRadius: 0,
+    eccentricity: 0,
+    periapsisAngle: (0 * Math.PI) / 180,
     phase: 0,
     color: "#ffc76a",
   },
@@ -56,9 +64,11 @@ export const bodies: Body[] = [
     rotationPeriodDays: 58.6462,
     fact: "Od jednego wschodu Słońca do następnego mijają tutaj 176 ziemskich dni — dwa merkuryjskie lata.",
     source: "https://science.nasa.gov/mercury/facts/",
-    dataSources: [physical, orbital],
+    dataSources: [physical, orbital, orbitShapes],
     displayRadius: 0.5,
     orbitRadius: 7,
+    eccentricity: 0.20563593,
+    periapsisAngle: (77.45779628 * Math.PI) / 180,
     phase: -0.5,
     color: "#a6a09a",
   },
@@ -74,9 +84,11 @@ export const bodies: Body[] = [
     rotationPeriodDays: -243.018,
     fact: "Jeden pełny obrót Wenus względem gwiazd trwa dłużej niż jej obieg wokół Słońca. Obraca się też w przeciwną stronę niż Ziemia.",
     source: "https://science.nasa.gov/venus/venus-facts/",
-    dataSources: [physical, orbital],
+    dataSources: [physical, orbital, orbitShapes],
     displayRadius: 0.85,
     orbitRadius: 10,
+    eccentricity: 0.00677672,
+    periapsisAngle: (131.60246718 * Math.PI) / 180,
     phase: 2.5,
     color: "#d7bd8a",
   },
@@ -92,9 +104,11 @@ export const bodies: Body[] = [
     rotationPeriodDays: 0.99726968,
     fact: "Światło Słońca dociera do Ziemi po około ośmiu minutach. Patrząc na naszą gwiazdę, widzimy jej niedawną przeszłość.",
     source: "https://science.nasa.gov/earth/facts/",
-    dataSources: [physical, orbital],
+    dataSources: [physical, orbital, orbitShapes],
     displayRadius: 0.92,
     orbitRadius: 14,
+    eccentricity: 0.01671123,
+    periapsisAngle: (102.93768193 * Math.PI) / 180,
     phase: 0.8,
     color: "#81b6d4",
   },
@@ -110,9 +124,11 @@ export const bodies: Body[] = [
     rotationPeriodDays: 1.02595676,
     fact: "Na Marsie znajduje się Olympus Mons — największy wulkan Układu Słonecznego.",
     source: "https://science.nasa.gov/mars/facts/",
-    dataSources: [physical, orbital],
+    dataSources: [physical, orbital, orbitShapes],
     displayRadius: 0.68,
     orbitRadius: 18,
+    eccentricity: 0.0933941,
+    periapsisAngle: (-23.94362959 * Math.PI) / 180,
     phase: 3.5,
     color: "#cc8064",
   },
@@ -128,9 +144,11 @@ export const bodies: Body[] = [
     rotationPeriodDays: 0.41354,
     fact: "Wielka Czerwona Plama jest potężną burzą większą od Ziemi, obserwowaną od setek lat.",
     source: "https://science.nasa.gov/jupiter/jupiter-facts/",
-    dataSources: [physical, orbital],
+    dataSources: [physical, orbital, orbitShapes],
     displayRadius: 2.1,
     orbitRadius: 26,
+    eccentricity: 0.04838624,
+    periapsisAngle: (14.72847983 * Math.PI) / 180,
     phase: -0.3,
     color: "#cfb69c",
   },
@@ -146,9 +164,11 @@ export const bodies: Body[] = [
     rotationPeriodDays: 0.44401,
     fact: "Średnia gęstość Saturna jest mniejsza od gęstości wody. To jedyna planeta Układu Słonecznego o tej właściwości.",
     source: "https://science.nasa.gov/saturn/facts/",
-    dataSources: [physical, orbital],
+    dataSources: [physical, orbital, orbitShapes],
     displayRadius: 1.75,
     orbitRadius: 35,
+    eccentricity: 0.05386179,
+    periapsisAngle: (92.59887831 * Math.PI) / 180,
     phase: 2,
     color: "#d5c39d",
   },
@@ -164,9 +184,11 @@ export const bodies: Body[] = [
     rotationPeriodDays: -0.71833,
     fact: "Oś Urana jest nachylona o około 98°. W okolicach biegunów noc może trwać około 21 ziemskich lat.",
     source: "https://science.nasa.gov/uranus/facts/",
-    dataSources: [physical, orbital],
+    dataSources: [physical, orbital, orbitShapes],
     displayRadius: 1.3,
     orbitRadius: 43,
+    eccentricity: 0.04725744,
+    periapsisAngle: (170.9542763 * Math.PI) / 180,
     phase: 4.4,
     color: "#a4cfd0",
   },
@@ -182,9 +204,11 @@ export const bodies: Body[] = [
     rotationPeriodDays: 0.67125,
     fact: "Wiatry Neptuna potrafią przekraczać 2000 km/h, mimo że dociera tu tak niewiele energii słonecznej.",
     source: "https://science.nasa.gov/neptune/neptune-facts/",
-    dataSources: [physical, orbital],
+    dataSources: [physical, orbital, orbitShapes],
     displayRadius: 1.25,
     orbitRadius: 51,
+    eccentricity: 0.00859048,
+    periapsisAngle: (44.96476227 * Math.PI) / 180,
     phase: 0.5,
     color: "#6b9fbf",
   },

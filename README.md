@@ -84,7 +84,8 @@ Raporty/ślady z nieudanego przebiegu są zachowywane przez 14 dni.
 
 **Widok poglądowy — rozmiary i odległości nie zachowują wspólnej skali.**
 To symulacja poglądowa, bez efemeryd. Czas liczony jest od jej początku,
-nie od aktualnej daty astronomicznej. Orbity to okręgi we wspólnej płaszczyźnie;
+nie od aktualnej daty astronomicznej. Orbity ośmiu planet są elipsami z mimośrodami i kierunkami peryhelium NASA/JPL J2000;
+wspólna płaszczyzna pozostaje uproszczeniem. Egzoplanety zachowują kołowe przybliżenie;
 względne okresy obiegu odpowiadają danym NASA. Obroty osiowe są spowolnione
 wizualnie (z zachowaniem kierunku). Nachylenia osi poza wskazanymi detalami
 są uproszczone. Pas planetoid jest ilustracją, a nie katalogiem obiektów.

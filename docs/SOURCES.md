@@ -26,7 +26,7 @@ Ujemny okres obrotu Wenus i Urana oznacza obrót wsteczny. Okres obrotu odnosi s
 
 **Widok poglądowy — rozmiary i odległości nie zachowują wspólnej skali.**
 
-Orbity są przybliżonymi okręgami we wspólnej płaszczyźnie. Pomijamy mimośrody, nachylenia orbit, precesję, oddziaływania grawitacyjne i barycentrum. Zachowujemy kolejność planet oraz względne okresy obiegu. Promienie wizualne, odległości wizualne i początkowe fazy orbitalne są umowne. Nie korzystamy z efemeryd: pozycje **nie są aktualnymi pozycjami astronomicznymi**, a licznik pokazuje czas od początku symulacji poglądowej.
+Orbity ośmiu planet Układu Słonecznego są elipsami opartymi na mimośrodach i długościach peryhelium NASA/JPL dla J2000. Równanie Keplera wyznacza ruch szybszy przy peryhelium i wolniejszy przy aphelium. Egzoplanety zachowują kołowe przybliżenie. Pomijamy nachylenia orbit, precesję i wzajemne oddziaływania grawitacyjne; dla Ziemi stosujemy przybliżenie parametrami barycentrum Ziemia–Księżyc. Szczegóły: [ORBITS.md](ORBITS.md). Zachowujemy kolejność planet oraz względne okresy obiegu. Promienie wizualne, odległości wizualne i początkowe fazy orbitalne są umowne. Nie korzystamy z efemeryd: pozycje **nie są aktualnymi pozycjami astronomicznymi**, a licznik pokazuje czas od początku symulacji poglądowej.
 
 ## Inspiracje interakcji
 
