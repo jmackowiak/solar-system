@@ -102,3 +102,25 @@ E2E używa rzeczywistego WebGL/SwiftShader w produkcyjnym podglądzie, sprawdzaj
 render, pozycje, materiały i skutki interakcji. Testy schowka kontrolują wyłącznie
 API schowka, a testy awarii kontrolują odpowiedź wskazanej tekstury; canvas ani
 rendering nie są zamockowane. Testy funkcjonalne nie są pomiarem FPS telefonu.
+
+## Ponowny pomiar końcowego kodu (`ddda2c8`)
+
+Po wszystkich poprawkach uruchomiono oba benchmarki ponownie, kolejno na tym
+samym sprzęcie, bez równoległych testów. Powyższe pierwsze pomiary pozostają
+zapisane dla pokazania zmienności; poniżej druga próba, a nie średnia obu.
+
+| Scenariusz | 1440×900 FPS / P95 | 390×844 emulacja FPS / P95 |
+|---|---:|---:|
+| Cały układ | 60,08 / 18,2 ms | 60,09 / 17,8 ms |
+| Przelot do Saturna | 60,13 / 17,2 ms | 60,47 / 18,3 ms |
+| Saturn z bliska | 60,09 / 18,3 ms | 60,09 / 17,9 ms |
+| Księżyc z bliska | 60,08 / 18,3 ms | 60,08 / 18,2 ms |
+| Impuls światła, 600 s/s | 60,05 / 18,2 ms | 60,06 / 17,6 ms |
+
+Mediana: 16,7 ms. Pierwsza użyteczna scena: **536,4 / 504,3 ms**;
+transfer **813 728 B ≈ 0,814 MB**. Reakcje pary/mapy/fazy: 13,5/30,3/29,6 ms
+desktop i 16,3/29,0/28,5 ms emulacja. Statyczne okna ponownie: 0 renderów
+porównania/mapy3000/faz; mapa100 — 1 desktop / 0 emulacja. Brak błędów
+aplikacji i zasobów w obu kontekstach. To nadal krótkie próby na komputerze;
+nie zastępują testu fizycznego telefonu ani nie wyjaśniają rzadszych dłuższych
+odstępów w pierwszej sekwencji.
