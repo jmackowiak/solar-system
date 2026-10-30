@@ -7,6 +7,8 @@ import ExoplanetSurface from "./ExoplanetSurface";
 import MoonSurface from "./MoonSurface";
 import Comparison from "./Comparison";
 import LightTravel from "./LightTravel";
+import Neighborhood from "./Neighborhood";
+import { planetarySystems } from "../data/systems";
 import { advanceLight } from "../lib/light-clock";
 import { comparisonLayout } from "../lib/comparison";
 import { worldPosition } from "../lib/world-position";
@@ -509,6 +511,11 @@ function Engine({
     const c = controls.current;
     if (!c) return;
     c.enableRotate = props.mode !== "compare" && props.mode !== "light";
+    if (props.mode === "neighborhood") {
+      flight.current=null; scaleTransition.current=null; worlds.blend.value=0; transitionMode.current=props.mode;
+      const r=props.neighborhoodRange/100,fit=Math.max(r*3.3,r*3.4/Math.max(size.width/size.height,.15));
+      c.target.set(0,0,0); camera.position.set(.35*fit,.6*fit,.8*fit); c.minDistance=r*.4; c.maxDistance=r*12; c.enableDamping=!props.reduced; c.update(); invalidate(); return;
+    }
     if (props.mode === "light") {
       flight.current = null; scaleTransition.current = null; worlds.blend.value=0; transitionMode.current=props.mode;
       c.enableDamping=false; c.target.set(-1.5,-1.6,0);
@@ -569,6 +576,10 @@ function Engine({
   }, [props.mode, props.selected, props.navigation]);
   useEffect(() => {
     const c = controls.current;
+    if (props.mode === "neighborhood" && c) {
+      const r=props.neighborhoodRange/100,fit=Math.max(r*3.3,r*3.4/Math.max(size.width/size.height,.15));
+      c.target.set(0,0,0); camera.position.set(.35*fit,.6*fit,.8*fit); c.minDistance=r*.4; c.maxDistance=r*12; c.update(); invalidate(); return;
+    }
     if (props.mode === "light" && c) {
       const fit=Math.max(17,52/Math.max(size.width/size.height,.15))/(2*Math.tan(23*Math.PI/180));
       c.target.set(-1.5,-1.6,0); camera.position.set(-1.5,-1.6,fit); c.minDistance=fit*.85; c.maxDistance=fit*3; c.update(); invalidate(); return;
@@ -587,7 +598,7 @@ function Engine({
       c.update();
       invalidate();
     }
-  }, [size.width, size.height, props.mode, props.comparison.left.diameterKm, props.comparison.right.diameterKm, camera, invalidate, temp]);
+  }, [size.width, size.height, props.mode, props.comparison.left.diameterKm, props.comparison.right.diameterKm, props.neighborhoodRange, camera, invalidate, temp]);
   useEffect(()=>{lastFrame.current=0;invalidate();},[props.lightVersion,invalidate]);
   const paused = props.simulation.current.paused;
   const speed = props.simulation.current.speed;
@@ -632,6 +643,14 @@ function Engine({
         el.dataset.draws = String(gl.info.render.calls);
         el.dataset.triangles = String(gl.info.render.triangles);
         el.dataset.points = String(gl.info.render.points);
+        if(props.mode === "neighborhood" || props.mode === "galaxy") {
+          const values:Record<string,number[]>={};
+          for(const system of planetarySystems) {
+            const object=scene.getObjectByName(`${props.mode === "galaxy" ? "galaxy-system" : "neighborhood"}-${system.id}`);
+            if(object) values[system.id]=object.getWorldPosition(new THREE.Vector3()).toArray();
+          }
+          el.dataset[props.mode === "galaxy" ? "galaxySystems" : "neighborhoodPositions"]=JSON.stringify(values);
+        }
         if(props.mode === "light") {
           el.dataset.lightSeconds = String(props.lightClock.current.seconds);
           el.dataset.pulseX = String(scene.getObjectByName("light-pulse")?.position.x);
@@ -897,6 +916,7 @@ export default function SolarScene(props: SceneProps) {
           high={high}
           worlds={worlds}
         />
+        {props.mode === "neighborhood" && <Neighborhood language={props.language} range={props.neighborhoodRange} portal={portal} onSystem={props.onSystem} labels={props.labels}/>}
         {props.mode === "light" && <LightTravel clock={props.lightClock} bodies={props.solarBodies} target={props.lightTarget} portal={portal} language={props.language} />}
         {props.mode === "compare" && <Comparison left={props.comparison.left} right={props.comparison.right} high={high} portal={portal} onReady={invalidateGal.current} />}
         <group ref={solarWorld}>
@@ -937,6 +957,8 @@ export default function SolarScene(props: SceneProps) {
                 high={high}
                 language={props.language}
                 onEnter={props.onEnterSolar}
+                onSystem={props.onSystem}
+                onNeighborhood={props.onNeighborhood}
                 labels={props.mode === "galaxy" && props.labels}
                 portal={portal}
                 fade={blend}

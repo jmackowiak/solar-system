@@ -3,6 +3,8 @@ import type { RefObject } from "react";
 import { Html } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
+import { planetarySystems, type SystemId } from "../data/systems";
+import { galacticSystemPosition } from "../lib/stellar-position";
 import type { Language } from "../i18n";
 import {
   createGalaxyParticles,
@@ -123,6 +125,8 @@ export interface GalaxyProps {
   onReady: () => void;
   language: Language;
   onEnter: () => void;
+  onSystem: (id: SystemId) => void;
+  onNeighborhood: () => void;
   labels: boolean;
   portal: RefObject<HTMLDivElement | null>;
 }
@@ -134,6 +138,8 @@ export default function Galaxy({
   onReady,
   language,
   onEnter,
+  onSystem,
+  onNeighborhood,
   labels,
   portal,
 }: GalaxyProps) {
@@ -146,7 +152,11 @@ export default function Galaxy({
     <group name="milky-way">
       <Population high={high} fade={fade} haze />
       <Population high={high} fade={fade} />
-      <group position={solarPosition}>
+      {planetarySystems.filter(s=>s.id!=="solar").map(system=><group key={system.id} name={`galaxy-system-${system.id}`} position={galacticSystemPosition(system)}>
+        <points><bufferGeometry><bufferAttribute attach="attributes-position" args={[new Float32Array([0,0,0]),3]}/></bufferGeometry><pointsMaterial size={5} sizeAttenuation={false} color={system.starColor} toneMapped={false}/></points>
+        <mesh onClick={e=>{if(e.delta>5)return;e.stopPropagation();onSystem(system.id);}}><sphereGeometry args={[.09,8,8]}/><meshBasicMaterial transparent opacity={0} depthWrite={false}/></mesh>
+      </group>)}
+      <group name="galaxy-system-solar" position={solarPosition}>
         <mesh position-y={0.2}>
           <sphereGeometry args={[0.32, 16, 8]} />
           <meshBasicMaterial color="#ffe0a3" />
@@ -189,7 +199,7 @@ export default function Galaxy({
             zIndexRange={[12, 0]}
             style={{ pointerEvents: "auto" }}
           >
-            <button
+            <div><button
               className="galaxy-marker"
               data-testid="galaxy-marker"
               aria-label={enter}
@@ -228,7 +238,7 @@ export default function Galaxy({
               <span style={{ fontSize: 9, color: "#a1adb6" }}>
                 {enter} <span aria-hidden="true">↗</span>
               </span>
-            </button>
+            </button><button className="galaxy-neighborhood-link" onClick={onNeighborhood}>{en ? "Explore solar neighborhood" : "Odkrywaj sąsiedztwo Słońca"} ↗</button></div>
           </Html>
         )}
       </group>

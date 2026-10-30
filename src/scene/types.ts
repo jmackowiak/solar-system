@@ -4,7 +4,7 @@ import type { Simulation } from "../lib/simulation";
 import type { Body } from "../data/bodies";
 import type { LightClock } from "../lib/light-clock";
 import type { SystemId } from "../data/systems";
-export type ViewMode = "solar" | "galaxy" | "compare" | "light";
+export type ViewMode = "solar" | "galaxy" | "compare" | "light" | "neighborhood";
 export type Quality = "auto" | "low" | "high";
 export interface SceneProps {
   language: Language;
@@ -17,6 +17,9 @@ export interface SceneProps {
   lightClock: MutableRefObject<LightClock>;
   lightVersion: number;
   lightTarget: string;
+  neighborhoodRange: 100 | 3000;
+  onSystem: (id: SystemId) => void;
+  onNeighborhood: () => void;
   solarBodies: readonly Body[];
   onEnterSolar: () => void;
   simulation: MutableRefObject<Simulation>;

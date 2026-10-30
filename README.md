@@ -77,6 +77,14 @@ Osobny zegar ma tempo 1 lub 10 minut lotu na sekundę; reset wraca do emisji
 i pauzuje. Główny zegar układu pozostaje zachowany. Prędkość światła i
 przeliczenia: [źródła oraz matematyka](docs/DISCOVERY-DATA.md).
 
+**Discover → Solar neighborhood / Sąsiedztwo Słońca** jest pośrednią mapą
+między układem a Galaktyką. Zakres **100 lat świetlnych** obejmuje Słońce
+i TRAPPIST-1, a **3000 lat świetlnych** także TOI-700 i Kepler-90. Punkty mają
+wspólną skalę odległości i kierunki z NASA Exoplanet Archive, przeliczone do
+współrzędnych galaktycznych według ESA Gaia. Te same układy są zaznaczone
+w pełnej Drodze Mlecznej; pobliskie gwiazdy nakładają się w jej ogromnej skali.
+To wybór czterech dostępnych układów, a nie kompletny katalog gwiazd.
+
 ## Testy
 
 ```sh

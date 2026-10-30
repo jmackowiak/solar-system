@@ -9,12 +9,14 @@ export default function GalaxyPanel({
   language,
   onEnter,
   onSystem,
+  onNeighborhood,
   collapsed,
   onCollapse,
 }: {
   language: Language;
   onEnter: () => void;
   onSystem: (id: SystemId) => void;
+  onNeighborhood: () => void;
   collapsed: boolean;
   onCollapse: () => void;
 }) {
@@ -54,6 +56,8 @@ export default function GalaxyPanel({
           {t("Wejdź do Układu Słonecznego")}
           <Icon name="arrow" />
         </button>
+        <button className="panel-journey" onClick={onNeighborhood}>{language === "en" ? "Explore solar neighborhood" : "Odkrywaj sąsiedztwo Słońca"}<Icon name="arrow" /></button>
+        <p className="artistic-notice">{language === "en" ? "Nearby systems overlap at this scale. Zoom into our neighborhood to separate their locations." : "Pobliskie układy nakładają się w tej skali. Otwórz sąsiedztwo, aby zobaczyć ich rozmieszczenie."}</p>
         <div className="galaxy-systems">
           <span className="eyebrow">{t("UKŁADY W DRODZE MLECZNEJ")}</span>
           <p>{t("Odkryte planety innych gwiazd. Wybierz układ, aby odwiedzić jego światy.")}</p>

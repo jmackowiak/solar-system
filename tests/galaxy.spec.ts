@@ -229,9 +229,10 @@ test("toggles the position label and provides a usable galaxy view on narrow tou
     exact: true,
   });
   await quality.selectOption("low");
-  await expect(scene(page)).toHaveAttribute("data-points", "13100");
+  // Each population also includes the three measured exoplanet-host markers.
+  await expect(scene(page)).toHaveAttribute("data-points", "13103");
   await quality.selectOption("high");
-  await expect(scene(page)).toHaveAttribute("data-points", "38600");
+  await expect(scene(page)).toHaveAttribute("data-points", "38603");
   await quality.selectOption("auto");
   await page
     .getByRole("button", { name: "Close settings", exact: true })

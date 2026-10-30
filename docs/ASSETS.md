@@ -1,6 +1,6 @@
 # Zasoby graficzne Orbity
 
-Wszystkie zasoby są przechowywane lokalnie w `public/textures`. Aplikacja nie pobiera map z zewnętrznych serwerów. Stan źródeł i zasad użycia sprawdzono 28 października 2026.
+Mapy planet są przechowywane lokalnie w `public/textures`, a fonty w `public/fonts`. Aplikacja nie pobiera tekstur ani shaderów z zewnętrznych serwerów lub CDN. Stan źródeł bitmap i zasad użycia sprawdzono 28 października 2026 r.; poniższy opis własnych shaderów i dodatkowych trybów uzupełniono 30 października.
 
 ## Ziemia i chmury — NASA Blue Marble (2002)
 
@@ -58,3 +58,18 @@ proceduralne minerały, kratery i pasy chmur. Brak zewnętrznych obrazów i doda
 transferu tekstur. Palety i relief są artystyczną interpretacją; nie stanowią
 pomiarów powierzchni lub atmosfer. Parametry fizyczne w osobnej strukturze danych
 pochodzą z NASA Exoplanet Archive, z odnośnikami opisanymi w EXOPLANETS.md.
+
+## Powierzchnie księżyców
+
+`src/scene/MoonSurface.tsx` zawiera oryginalny shader GLSL napisany dla Orbity. Deterministyczny szum, relief i schematyczne kratery tworzą rozpoznawalne interpretacje Księżyca, Io, Europy, Ganimedesa, Kallisto i Tytana. Palety nawiązują do opisów i wyglądu obiektów: siarkowe barwy Io, jasny lód i szczeliny Europy, starszy teren kraterowy oraz nieprzezroczysta ochrowa atmosfera Tytana.
+
+To **interpretacje artystyczne**, nie fotografie, mapy obserwacyjne ani rekonstrukcje konkretnych kraterów i struktur. Nie użyto obrazów pobranych z NASA, innych atlasów ani wygenerowanych usługą obrazową. Shader nie wymaga dodatkowego transferu tekstur. Stanowi własny kod źródłowy aplikacji, objęty deklarowaną licencją kodu projektu (ISC, `package.json`); odrębna deklaracja CC0 wyżej dotyczy własnych bitmap proceduralnych. Dane fizyczne i źródła NASA są opisane w [MOONS.md](MOONS.md).
+
+## Grafika dodatkowych trybów odkrywania
+
+- **Porównanie średnic** ponownie wykorzystuje lokalne mapy planet, oryginalne shadery księżyców i egzoplanet oraz geometrię sfer. Nie dodaje nowych zdjęć. Dwie bryły zachowują wspólną skalę średnic; pierścienie Saturna są świadomie pominięte w tym trybie.
+- **Podróż światła** używa własnej geometrii diagramu i impulsu oraz już dostępnych materiałów obiektów. Rysunek nie jest zdjęciem ani nagraniem ruchu światła. Wspólna skala odległości i powiększenie brył są opisane w interfejsie.
+- **Sąsiedztwo Słońca i markery układów w Galaktyce** powstają z geometrii, punktów i etykiet HTML. Ich położenia pochodzą z katalogowych kierunków i dystansów, po transformacji ESA Gaia; nie dodano rastrowej mapy gwiazd. Powiększone markery i przesunięte etykiety służą wyborowi obiektów. Podkład ramion Galaktyki pozostaje własną, proceduralną chmurą punktów, a nie kompletnym katalogiem gwiazd.
+- **Fazy Księżyca i zaćmienia** wykorzystują istniejącą mapę `earth-low.webp`, shader `MoonSurface`, własną tarczę SVG oraz oryginalny shader analitycznego zacienienia w `MoonPhases.tsx`. Półprzezroczyste stożki są objaśniającym rysunkiem cienia; ich widoczność w przestrzeni i proporcje są umowne. Nie zapożyczono ilustracji zaćmień ani kalendarzy.
+
+Żaden z tych trybów nie dodaje pobieranych podczas działania bitmap, katalogów lub zewnętrznych bibliotek graficznych. Źródła liczbowe i rozróżnienie danych od umownej prezentacji: [SOURCES.md](SOURCES.md) oraz [DISCOVERY-DATA.md](DISCOVERY-DATA.md).

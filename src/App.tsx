@@ -22,6 +22,8 @@ import Icon from "./Icon";
 import ComparisonPanel from "./ComparisonPanel";
 import LightPanel from "./LightPanel";
 import LightFallback from "./LightFallback";
+import NeighborhoodPanel from "./NeighborhoodPanel";
+import NeighborhoodFallback from "./NeighborhoodFallback";
 import { advanceLight, type LightClock } from "./lib/light-clock";
 import GalaxyPanel, { GalaxyFallback } from "./GalaxyPanel";
 import type { ViewMode } from "./scene/types";
@@ -100,6 +102,7 @@ export default function App() {
   const lightClock=useRef<LightClock>({seconds:0,playing:false,speed:60});
   const [lightVersion,setLightVersion]=useState(0);
   const [lightTarget,setLightTarget]=useState("earth");
+  const [neighborhoodRange,setNeighborhoodRange]=useState<100|3000>(100);
   const solarBodies=useMemo(()=>getSystemBodies("solar",language),[language]);
   const [pair, setPair] = useState<[string,string]>(["earth","jupiter"]);
   const comparisonCatalog = useMemo(()=>[...planetarySystems.flatMap(s=>getSystemBodies(s.id,language).slice(1)),...getMoons(language)], [language]);
@@ -373,6 +376,9 @@ export default function App() {
                 lightVersion={lightVersion}
                 lightTarget={lightTarget}
                 solarBodies={solarBodies}
+                neighborhoodRange={neighborhoodRange}
+                onSystem={changeSystem}
+                onNeighborhood={()=>switchMode("neighborhood")}
                 starColor={system.starColor}
                 onEnterSolar={enterSolar}
                 language={language}
@@ -608,6 +614,8 @@ export default function App() {
           {moonBodies.filter(m=>m.parentId===moonParent).map(m=><button key={m.id} aria-label={`${t("Wybierz")} ${m.name}`} aria-pressed={selected===m.id} onClick={()=>select(m.id)}><span style={{background:m.color}} />{m.name}</button>)}
         </nav>
       )}
+      {mode === "neighborhood" && fallback && <NeighborhoodFallback range={neighborhoodRange} language={language}/>}
+      {mode === "neighborhood" && <NeighborhoodPanel language={language} range={neighborhoodRange} onRange={setNeighborhoodRange} onSystem={changeSystem} onClose={home}/>}
       {mode === "light" && fallback && <LightFallback clock={lightClock} bodies={solarBodies} target={lightTarget} language={language}/>}
       {mode === "light" && <LightPanel language={language} clock={lightClock} bodies={solarBodies} target={lightTarget} onTarget={setLightTarget} onChange={()=>setLightVersion(v=>v+1)} onClose={home} />}
       {mode === "compare" && <ComparisonPanel language={language} left={comparison.left} right={comparison.right} catalog={comparisonCatalog} onLeft={id=>setPair(p=>[id,p[1]])} onRight={id=>setPair(p=>[p[0],id])} onClose={home} fallback={fallback} />}
@@ -638,7 +646,7 @@ export default function App() {
           <span>{t("Widok")}</span>
         </button>
       </div>
-      {explore && <nav className="discovery-menu" aria-label={language === "en" ? "Discovery tools" : "Narzędzia odkrywania"}><button onClick={()=>switchMode("compare")}>{language === "en" ? "Size comparison" : "Porównanie rozmiarów"}<Icon name="arrow" size={15}/></button><button onClick={()=>switchMode("light")}>{language === "en" ? "Light journey" : "Podróż światła"}<Icon name="arrow" size={15}/></button></nav>}
+      {explore && <nav className="discovery-menu" aria-label={language === "en" ? "Discovery tools" : "Narzędzia odkrywania"}><button onClick={()=>switchMode("compare")}>{language === "en" ? "Size comparison" : "Porównanie rozmiarów"}<Icon name="arrow" size={15}/></button><button onClick={()=>switchMode("neighborhood")}>{language === "en" ? "Solar neighborhood" : "Sąsiedztwo Słońca"}<Icon name="arrow" size={15}/></button><button onClick={()=>switchMode("light")}>{language === "en" ? "Light journey" : "Podróż światła"}<Icon name="arrow" size={15}/></button></nav>}
       {settings && (
         <section className="settings-panel" aria-label={t("Ustawienia widoku")}>
           <div className="panel-top">
@@ -697,6 +705,7 @@ export default function App() {
           language={language}
           onEnter={enterSolar}
           onSystem={changeSystem}
+          onNeighborhood={()=>switchMode("neighborhood")}
           collapsed={collapsed}
           onCollapse={() => setCollapsed((v) => !v)}
         />
