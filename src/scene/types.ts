@@ -2,6 +2,7 @@ import type { MutableRefObject } from "react";
 import type { Language } from "../i18n";
 import type { Simulation } from "../lib/simulation";
 import type { Body } from "../data/bodies";
+import type { CameraSnapshot } from "../lib/share";
 import type { LightClock } from "../lib/light-clock";
 import type { SystemId } from "../data/systems";
 export type ViewMode = "solar" | "galaxy" | "compare" | "light" | "neighborhood" | "phases";
@@ -20,6 +21,8 @@ export interface SceneProps {
   neighborhoodRange: 100 | 3000;
   phaseAngle: number;
   eclipseScenario: "phases" | "solar" | "lunar";
+  cameraSnapshot: MutableRefObject<CameraSnapshot|null>;
+  restoreCamera: MutableRefObject<CameraSnapshot|null>;
   onSystem: (id: SystemId) => void;
   onNeighborhood: () => void;
   solarBodies: readonly Body[];

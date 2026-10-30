@@ -442,6 +442,8 @@ function Engine({
   }, [props.mode, props.selected, props.moonParent, bodies]);
   const onFailure = props.onFailure;
   const started = useRef(false);
+  const restoredSizing = useRef(false);
+  const restoredPendingFrame = useRef(false);
   const flight = useRef<{
     from: THREE.Vector3;
     target: THREE.Vector3;
@@ -483,7 +485,7 @@ function Engine({
       lastFrame.current = 0;
       c.maxDistance = Math.max(
         c.getDistance(),
-        selectedRef.current.mode === "compare" ? c.maxDistance : selectedRef.current.mode === "galaxy"
+        (selectedRef.current.mode !== "solar" && selectedRef.current.mode !== "galaxy") ? c.maxDistance : selectedRef.current.mode === "galaxy"
           ? 500
           : selectedRef.current.radius
             ? selectedRef.current.radius * 24
@@ -513,6 +515,24 @@ function Engine({
     const c = controls.current;
     if (!c) return;
     c.enableRotate = props.mode !== "compare" && props.mode !== "light" && props.mode !== "phases";
+    const saved=props.restoreCamera.current;
+    if(saved){
+      flight.current=null; scaleTransition.current=null; worlds.blend.value=props.mode === "galaxy"?1:0; transitionMode.current=props.mode;
+      following.current.set(...(selected?worldPosition(selected,props.simulation.current.days,bodies):[0,0,0] as [number,number,number]));
+      c.enableDamping=false; c.target.set(...saved.target); camera.position.set(...saved.position);
+      const aspect=Math.max(size.width/size.height,.15);
+      if(props.mode==="solar") {
+        c.minDistance=selected?selected.displayRadius*(selected.id==="saturn"?2.6:1.6):5;
+        c.maxDistance=selected?(frameRadius(props.selected)||selected.displayRadius)*24:420;
+      } else if(props.mode==="galaxy") { c.minDistance=35; c.maxDistance=500;
+      } else if(props.mode==="neighborhood") {const r=props.neighborhoodRange/100;c.minDistance=r*.4;c.maxDistance=r*12;
+      } else if(props.mode==="phases") {const fit=Math.max(22,24/aspect);c.minDistance=fit*.8;c.maxDistance=fit*3;
+      } else {const width=props.mode==="compare"?comparisonLayout(props.comparison.left.diameterKm,props.comparison.right.diameterKm).width+1.8:52;
+        const height=props.mode==="compare"?9:17,fit=Math.max(height,width/aspect)/(2*Math.tan(23*Math.PI/180));
+        c.minDistance=fit*.85;c.maxDistance=fit*3;
+      } c.update(); c.enableDamping=!props.reduced;
+      restoredSizing.current=true; restoredPendingFrame.current=true; started.current=true; invalidate(); return;
+    }
     if(props.mode === "phases") {
       flight.current=null; scaleTransition.current=null; worlds.blend.value=0; transitionMode.current=props.mode;
       const fit=Math.max(22,24/Math.max(size.width/size.height,.15));
@@ -583,6 +603,7 @@ function Engine({
   }, [props.mode, props.selected, props.navigation]);
   useEffect(() => {
     const c = controls.current;
+    if(restoredSizing.current){restoredSizing.current=false;return;}
     if(props.mode === "phases" && c) {
       const fit=Math.max(22,24/Math.max(size.width/size.height,.15));
       c.target.set(0,0,0); camera.position.set(0,fit*.75,fit*.65); c.minDistance=fit*.8; c.maxDistance=fit*3; c.update(); invalidate(); return;
@@ -654,7 +675,21 @@ function Engine({
         el.dataset.draws = String(gl.info.render.calls);
         el.dataset.triangles = String(gl.info.render.triangles);
         el.dataset.points = String(gl.info.render.points);
+        if(props.mode === "compare") {
+          const maps:Record<string,string>={};
+          for(const body of [props.comparison.left,props.comparison.right]){
+            const mesh=scene.getObjectByName(`comparison-${body.id}`)?.children.find(o=>o instanceof THREE.Mesh) as THREE.Mesh|undefined;
+            const map=(mesh?.material as THREE.MeshStandardMaterial|undefined)?.map;
+            const image=map?.image as HTMLImageElement|undefined;
+            maps[body.id]=image?.currentSrc || image?.src || "";
+          }
+          el.dataset.comparisonTextures=JSON.stringify(maps);
+        }
         if(props.mode === "phases") {
+          const earth=scene.getObjectByName("phase-earth") as THREE.Mesh|undefined;
+          const map=(earth?.material as THREE.MeshStandardMaterial|undefined)?.map;
+          const image=map?.image as HTMLImageElement|undefined;
+          el.dataset.earthTexture=image?.currentSrc || image?.src || "";
           el.dataset.phaseAngle=String(props.phaseAngle);
           el.dataset.phaseFraction=String(illuminatedFraction(props.phaseAngle*Math.PI/180));
           el.dataset.eclipseScenario=props.eclipseScenario;
@@ -680,12 +715,13 @@ function Engine({
     };
     // readiness is tied to an actual render of the current navigation target
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scene, gl, props.mode, props.navigation, props.phaseAngle, props.eclipseScenario, props.onReady]);
+  }, [scene, gl, props.mode, props.navigation, props.phaseAngle, props.eclipseScenario, props.comparison.left.id, props.comparison.right.id, props.onReady]);
   useFrame((state) => {
     if (props.hidden || document.hidden) {
       lastFrame.current = 0;
       return;
     }
+    if(restoredPendingFrame.current){props.restoreCamera.current=null;restoredPendingFrame.current=false;}
     // Control actions replace the simulation object. Reset before consuming any elapsed time,
     // including when a demand frame runs before React's passive effects.
     if (clockMode.current !== props.mode) {
@@ -805,6 +841,8 @@ function Engine({
           camera.position.copy(temp.look).add(temp.diff);
         }
       }
+    const snapshot=props.cameraSnapshot.current || {position:[0,0,0] as [number,number,number],target:[0,0,0] as [number,number,number]};
+    camera.position.toArray(snapshot.position); c.target.toArray(snapshot.target); props.cameraSnapshot.current=snapshot;
     frames.current++;
     const el = document.querySelector<HTMLElement>('[data-testid="scene"]');
     if (el) {
@@ -834,6 +872,7 @@ function Engine({
     if (
       rawDt > 0 &&
       ((props.mode === "solar" && !sim.paused) ||
+        (props.mode === "light" && props.lightClock.current.playing) ||
         flight.current ||
         manual.current)
     ) {
@@ -934,10 +973,10 @@ export default function SolarScene(props: SceneProps) {
           high={high}
           worlds={worlds}
         />
-        {props.mode === "phases" && <MoonPhases angle={props.phaseAngle} scenario={props.eclipseScenario} language={props.language} portal={portal}/>}
+        {props.mode === "phases" && <MoonPhases angle={props.phaseAngle} scenario={props.eclipseScenario} language={props.language} portal={portal} onTexture={props.onTexture} textureVersion={props.textureVersion}/>}
         {props.mode === "neighborhood" && <Neighborhood language={props.language} range={props.neighborhoodRange} portal={portal} onSystem={props.onSystem} labels={props.labels}/>}
         {props.mode === "light" && <LightTravel clock={props.lightClock} bodies={props.solarBodies} target={props.lightTarget} portal={portal} language={props.language} />}
-        {props.mode === "compare" && <Comparison left={props.comparison.left} right={props.comparison.right} high={high} portal={portal} onReady={invalidateGal.current} />}
+        {props.mode === "compare" && <Comparison left={props.comparison.left} right={props.comparison.right} high={high} portal={portal} onReady={invalidateGal.current} onTexture={props.onTexture} textureVersion={props.textureVersion}/>}
         <group ref={solarWorld}>
           <pointLight
             position={[0, 0, 0]}

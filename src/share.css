@@ -1,0 +1,32 @@
+.share-dialog {
+  width: min(500px, calc(100vw - 32px)); max-height: calc(100svh - 32px);
+  padding: 28px; border: 1px solid #667f902e; border-radius: 20px;
+  background: linear-gradient(145deg, #14202b, #0c141c 72%); color: #e8edef;
+  box-shadow: 0 28px 120px #000a; overflow-y: auto; overscroll-behavior: contain;
+}
+.share-dialog::backdrop { background: #03080dbf; backdrop-filter: blur(7px); }
+.share-dialog-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.share-dialog-heading .eyebrow { color: #b39372; font-size: 9px; letter-spacing: .14em; }
+.share-dialog-heading h2 { font: 500 28px Manrope, sans-serif; letter-spacing: -.7px; margin: 9px 0 0; }
+.share-dialog-heading .round-button { width: 44px; height: 44px; flex: 0 0 44px; border: 1px solid #ffffff13; }
+.share-description { color: #a5b4c0; font-size: 13px; line-height: 1.75; margin: 22px 0; }
+.share-link-label { display: block; color: #c7d2d9; font-size: 11px; margin-bottom: 8px; }
+.share-link-input { display: block; width: 100%; height: 48px; padding: 0 12px; border: 1px solid #879aa32c; border-radius: 9px; background: #050b11a8; color: #c9d7df; font: 11px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; text-overflow: ellipsis; }
+.share-link-input:focus { border-color: #dfb88b90; text-overflow: clip; }
+.share-link-input::selection { background: #81674b; color: #fff6e8; }
+.share-paused { display: flex; align-items: center; gap: 7px; color: #95a6b3; font-size: 10px; line-height: 1.5; margin: 10px 0 22px; }
+.share-paused svg { color: #b59a7a; }
+.share-copy-button { width: 100%; min-height: 48px; border: 1px solid #cfa87880; border-radius: 9px; background: #dbb78a; color: #151a1e; font-weight: 600; font-size: 12px; }
+.share-copy-button:hover:not(:disabled) { color: #0c1116; background: #efcea7; }
+.share-copy-button:active:not(:disabled) { transform: translateY(1px); }
+.share-copy-status { color: #a9c6b4; font-size: 11px; line-height: 1.65; margin: 13px 0 0; min-height: 19px; }
+.share-copy-status.manual { color: #d8c0a3; }
+@media (max-width: 600px) {
+  .share-dialog { width: calc(100vw - 24px); max-height: calc(100svh - 24px); padding: 22px; border-radius: 16px; }
+  .share-dialog-heading h2 { font-size: 25px; }
+  .share-description { font-size: 12px; margin: 18px 0; }
+  .share-link-input { font-size: 11px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .share-dialog button { transition: none; }
+}

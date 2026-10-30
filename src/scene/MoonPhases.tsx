@@ -78,21 +78,23 @@ function ShadowOverlay({ target, targetRadius, origin, radius, length, lunar }: 
 }
 
 /** User-controlled educational geometry; no clock, animation loop or camera. */
-export default function MoonPhases({ angle, scenario, language, portal }: {
+export default function MoonPhases({ angle, scenario, language, portal, onTexture, textureVersion }: {
   angle: number; scenario: Scenario; language: Language; portal: RefObject<HTMLDivElement | null>;
+  onTexture:(ok:boolean)=>void; textureVersion:number;
 }) {
   const invalidate = useThree(state => state.invalidate);
   const host = useRef<Group>(null);
-  const [earthMap, setEarthMap] = useState<Texture>();
+  const [earthMap, setEarthMap] = useState<{version:number;texture:Texture}>();
+  const earthTexture=earthMap?.version === textureVersion ? earthMap.texture : undefined;
   useEffect(() => {
     let disposed = false;
     let owned: Texture | undefined;
-    new TextureLoader().load("/textures/earth-low.webp", texture => {
+    new TextureLoader().load(`/textures/earth-low.webp?v=${textureVersion}`, texture => {
       if (disposed) { texture.dispose(); return; }
-      owned = texture; texture.colorSpace = SRGBColorSpace; setEarthMap(texture); invalidate();
-    }, undefined, () => invalidate());
+      owned = texture; texture.colorSpace = SRGBColorSpace; setEarthMap({version:textureVersion,texture}); onTexture(true); invalidate();
+    }, undefined, () => {if(!disposed)onTexture(false);invalidate();});
     return () => { disposed = true; owned?.dispose(); };
-  }, [invalidate]);
+  }, [invalidate,onTexture,textureVersion]);
   const tilted = scenario === "phases";
   const moon = useMemo(() => moonPosition(angle, tilted), [angle, tilted]);
   const orbit = useMemo(() => Array.from({ length: 129 }, (_, i) => moonPosition(i / 128 * 360, tilted).toArray()).flat(), [tilted]);
@@ -107,9 +109,9 @@ export default function MoonPhases({ angle, scenario, language, portal }: {
     <group ref={host} position={[-20, 0, 0]}><directionalLight intensity={2.3} color="#fff5e8" /></group>
     <Segment points={orbit} opacity={0.35} />
     {[-2, 2].map(z => <Segment key={z} points={[-8, 0, z, -2.2, 0, z]} color="#c3a479" opacity={0.23} />)}
-    <mesh rotation={[0.2, -1.2, 0.41]}>
+    <mesh name="phase-earth" rotation={[0.2, -1.2, 0.41]}>
       <sphereGeometry args={[1, 64, 40]} />
-      <meshStandardMaterial key={earthMap?.uuid || "plain"} map={earthMap} color={earthMap ? "#ffffff" : "#527b9b"}
+      <meshStandardMaterial key={earthTexture?.uuid || "plain"} map={earthTexture} color={earthTexture ? "#ffffff" : "#527b9b"}
         emissive="#274052" emissiveIntensity={0.035} roughness={0.95} />
     </mesh>
     <mesh name="phase-moon" position={moon} rotation-y={-Math.atan2(moon.z, moon.x)}>

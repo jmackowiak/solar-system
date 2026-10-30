@@ -1,5 +1,7 @@
 # Weryfikacja Orbity — 28 października 2026
 
+Nowsze pomiary i weryfikacja sześciu rozszerzeń: [30 października 2026](DISCOVERY-VERIFICATION.md). Poniżej zachowano historyczny raport pierwotnej wersji.
+
 ## Środowisko i sposób pomiaru
 
 Mac z Apple M2, 16 GB RAM; macOS 27.0.1. Zwykłe (headed) Chromium 156.0.0.0,

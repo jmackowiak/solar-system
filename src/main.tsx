@@ -6,6 +6,7 @@ import "./discovery.css";
 import "./light.css";
 import "./neighborhood.css";
 import "./phases.css";
+import "./share.css";
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <App />

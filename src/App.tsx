@@ -26,6 +26,8 @@ import NeighborhoodPanel from "./NeighborhoodPanel";
 import NeighborhoodFallback from "./NeighborhoodFallback";
 import PhasesPanel from "./PhasesPanel";
 import PhasesFallback from "./PhasesFallback";
+import ShareDialog from "./ShareDialog";
+import {parseSharedView,shareUrl,type CameraSnapshot} from "./lib/share";
 import { advanceLight, type LightClock } from "./lib/light-clock";
 import GalaxyPanel, { GalaxyFallback } from "./GalaxyPanel";
 import type { ViewMode } from "./scene/types";
@@ -89,41 +91,49 @@ class SceneBoundary extends Component<
 }
 export default function App() {
   const { language, setLanguage, t } = useLanguage();
-  const [systemId, setSystemId] = useState<SystemId>("solar");
+  const [shared] = useState(()=>parseSharedView(location.search));
+  const cameraSnapshot=useRef<CameraSnapshot|null>(null);
+  const restoreCamera=useRef<CameraSnapshot|null>(shared?.camera ?? null);
+  const [sharingUrl,setSharingUrl]=useState<string|null>(null);
+  const wasSharing=useRef(false);
+  useEffect(()=>{if(shared)setLanguage(shared.language);},[shared,setLanguage]);
+  useEffect(()=>{if(sharingUrl)wasSharing.current=true;else if(wasSharing.current){wasSharing.current=false;document.querySelector<HTMLButtonElement>(".discovery-trigger")?.focus();}},[sharingUrl]);
+  const [systemId, setSystemId] = useState<SystemId>(shared?.system ?? "solar");
   const bodies = useMemo(() => getSystemBodies(systemId, language), [systemId, language]);
   const system = systemById[systemId];
   const systemCopy = system.copy[language];
   const isSolar = systemId === "solar";
   const initialSpeed = isSolar ? 8 : 0.25;
   const moonBodies = useMemo(() => isSolar ? getMoons(language) : [], [isSolar, language]);
-  const [moonParent, setMoonParent] = useState<string | null>(null);
-  const moonContext = useRef<{ parent: string; speed: number } | null>(null);
+  const initialMoonParent=shared?.moonParent || moonParentById[shared?.selected || ""] || null;
+  const [moonParent, setMoonParent] = useState<string | null>(initialMoonParent);
+  const moonContext = useRef<{ parent: string; speed: number } | null>(initialMoonParent?{parent:initialMoonParent,speed:8}:null);
   const sceneBodies = useMemo(() => [...bodies, ...moonBodies.filter(m => m.parentId === moonParent)], [bodies, moonBodies, moonParent]);
-  const [mode, setMode] = useState<ViewMode>("solar");
+  const [mode, setMode] = useState<ViewMode>(shared?.mode ?? "solar");
   const [explore, setExplore] = useState(false);
-  const lightClock=useRef<LightClock>({seconds:0,playing:false,speed:60});
+  const lightClock=useRef<LightClock>({seconds:shared?.light ?? 0,playing:false,speed:shared?.lightSpeed ?? 60});
   const [lightVersion,setLightVersion]=useState(0);
-  const [lightTarget,setLightTarget]=useState("earth");
-  const [neighborhoodRange,setNeighborhoodRange]=useState<100|3000>(100);
-  const [phaseAngle,setPhaseAngle]=useState(0);
-  const [eclipseScenario,setEclipseScenario]=useState<"phases"|"solar"|"lunar">("phases");
+  const [lightTarget,setLightTarget]=useState(shared?.lightTarget ?? "earth");
+  const [neighborhoodRange,setNeighborhoodRange]=useState<100|3000>(shared?.range ?? 100);
+  const [phaseAngle,setPhaseAngle]=useState(shared?.phase ?? 0);
+  const [eclipseScenario,setEclipseScenario]=useState<"phases"|"solar"|"lunar">(shared?.eclipse ?? "phases");
   const solarBodies=useMemo(()=>getSystemBodies("solar",language),[language]);
-  const [pair, setPair] = useState<[string,string]>(["earth","jupiter"]);
+  const [pair, setPair] = useState<[string,string]>(shared?.pair ?? ["earth","jupiter"]);
   const comparisonCatalog = useMemo(()=>[...planetarySystems.flatMap(s=>getSystemBodies(s.id,language).slice(1)),...getMoons(language)], [language]);
   const comparison = {left:comparisonCatalog.find(b=>b.id===pair[0])!,right:comparisonCatalog.find(b=>b.id===pair[1])!};
   const stops = language === "en" ? englishTourStops : polishStops;
   const [reduced, setReduced] = useState(
     () => matchMedia("(prefers-reduced-motion: reduce)").matches,
   );
-  const simulation = useRef(initialSimulation(reduced));
+  const simulation = useRef(shared?{days:shared.days,speed:shared.speed,paused:true}:initialSimulation(reduced));
   const savedSimulations = useRef<Partial<Record<SystemId, Simulation>>>({});
-  const [paused, setPaused] = useState(reduced),
-    [speed, setSpeed] = useState(8),
-    [days, setDays] = useState(0);
-  const [selected, setSelected] = useState<string | null>(null),
+  const [paused, setPaused] = useState(shared?true:reduced),
+    [speed, setSpeed] = useState(shared?.speed ?? 8),
+    [days, setDays] = useState(shared?.days ?? 0);
+  const [selected, setSelected] = useState<string | null>(shared?.selected ?? null),
     [navigation, setNavigation] = useState(0),
-    [orbits, setOrbits] = useState(true),
-    [labels, setLabels] = useState(true),
+    [orbits, setOrbits] = useState(shared?.orbits ?? true),
+    [labels, setLabels] = useState(shared?.labels ?? true),
     [quality, setQuality] = useState<Quality>("auto"),
     [autoQuality, setAutoQuality] = useState("high");
   const [settings, setSettings] = useState(false),
@@ -143,6 +153,12 @@ export default function App() {
     aboutButton = useRef<HTMLButtonElement>(null),
     aboutDialog = useRef<HTMLDialogElement>(null);
   const restoreFocus = useRef(false);
+  useEffect(()=>{
+    if(shared && !lastTrigger.current){
+      const id=moonParentById[shared.selected || ""] || shared.selected;
+      lastTrigger.current=document.querySelector<HTMLElement>(`.object-nav button[data-body-id="${id}"]`) || document.querySelector<HTMLButtonElement>(".discovery-trigger");
+    }
+  },[shared]);
   const body = bodies.find((b) => b.id === selected) || moonBodies.find((b) => b.id === selected);
   const navParent = body?.parentId || body?.id;
   const parentMoons = moonBodies.filter((moon) => moon.parentId === navParent);
@@ -253,6 +269,7 @@ export default function App() {
   }, [tour]);
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && sharingUrl) { e.preventDefault(); setSharingUrl(null); return; }
       if (e.key === "Escape") {
         if (about) {
           setAbout(false);
@@ -279,7 +296,7 @@ export default function App() {
     };
     window.addEventListener("keydown", key);
     return () => window.removeEventListener("keydown", key);
-  }, [about, settings, explore, home, mode]);
+  }, [about, settings, explore, home, mode, sharingUrl]);
   useEffect(() => {
     if (about) aboutDialog.current?.showModal();
     else aboutDialog.current?.close();
@@ -326,6 +343,11 @@ export default function App() {
     setSettings(false);
     setCollapsed(compactView());
     setNavigation((n) => n + 1);
+  };
+  const openShare=()=>{
+    const sim=simulation.current;
+    setSharingUrl(shareUrl(location.href,{v:1,mode,system:systemId,selected,days:sim.days,speed:sim.speed,paused:true,language,orbits,labels,camera:ready?cameraSnapshot.current:null,pair,light:lightClock.current.seconds,phase:phaseAngle,range:neighborhoodRange,eclipse:eclipseScenario,moonParent:moonParent as "earth"|"jupiter"|"saturn"|null,lightTarget,lightSpeed:lightClock.current.speed as 60|600}));
+    setExplore(false);
   };
   const enterSolar = useCallback(() => changeSystem("solar"), [changeSystem]);
   const reset = () => {
@@ -383,6 +405,8 @@ export default function App() {
                 neighborhoodRange={neighborhoodRange}
                 phaseAngle={phaseAngle}
                 eclipseScenario={eclipseScenario}
+                cameraSnapshot={cameraSnapshot}
+                restoreCamera={restoreCamera}
                 onSystem={changeSystem}
                 onNeighborhood={()=>switchMode("neighborhood")}
                 starColor={system.starColor}
@@ -654,7 +678,7 @@ export default function App() {
           <span>{t("Widok")}</span>
         </button>
       </div>
-      {explore && <nav className="discovery-menu" aria-label={language === "en" ? "Discovery tools" : "Narzędzia odkrywania"}><button onClick={()=>switchMode("compare")}>{language === "en" ? "Size comparison" : "Porównanie rozmiarów"}<Icon name="arrow" size={15}/></button><button onClick={()=>switchMode("phases")}>{language === "en" ? "Moon phases & eclipses" : "Fazy Księżyca i zaćmienia"}<Icon name="arrow" size={15}/></button><button onClick={()=>switchMode("neighborhood")}>{language === "en" ? "Solar neighborhood" : "Sąsiedztwo Słońca"}<Icon name="arrow" size={15}/></button><button onClick={()=>switchMode("light")}>{language === "en" ? "Light journey" : "Podróż światła"}<Icon name="arrow" size={15}/></button></nav>}
+      {explore && <nav className="discovery-menu" aria-label={language === "en" ? "Discovery tools" : "Narzędzia odkrywania"}><button onClick={()=>switchMode("compare")}>{language === "en" ? "Size comparison" : "Porównanie rozmiarów"}<Icon name="arrow" size={15}/></button><button onClick={()=>switchMode("phases")}>{language === "en" ? "Moon phases & eclipses" : "Fazy Księżyca i zaćmienia"}<Icon name="arrow" size={15}/></button><button onClick={()=>switchMode("neighborhood")}>{language === "en" ? "Solar neighborhood" : "Sąsiedztwo Słońca"}<Icon name="arrow" size={15}/></button><button onClick={()=>switchMode("light")}>{language === "en" ? "Light journey" : "Podróż światła"}<Icon name="arrow" size={15}/></button><button onClick={openShare}>{language === "en" ? "Share view" : "Udostępnij widok"}<Icon name="arrow" size={15}/></button></nav>}
       {settings && (
         <section className="settings-panel" aria-label={t("Ustawienia widoku")}>
           <div className="panel-top">
@@ -977,6 +1001,7 @@ export default function App() {
         {ready ? t("Scena 3D gotowa.") : ""} {t("Wczytano")} {loaded}{" "}
         {t("map powierzchni.")}
       </span>
+      {sharingUrl && <ShareDialog language={language} url={sharingUrl} onClose={()=>setSharingUrl(null)}/>}
       <dialog
         ref={aboutDialog}
         className="about-dialog"

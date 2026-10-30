@@ -157,3 +157,9 @@
  .app.discovery-mode .scene-tools { top:60px; bottom:auto; right:12px; left:auto; }
  .app .discovery-menu { top:108px; right:12px; }
 }
+.discovery-menu{max-height:calc(100svh - 220px);overflow-y:auto;overscroll-behavior:contain}
+@media(max-width:760px){.app .discovery-menu{max-height:calc(100svh - 196px)}}
+@media(orientation:landscape) and (max-height:500px){.app .discovery-menu{max-height:calc(100svh - 124px)}}
+.app.discovery-mode .texture-notice{bottom:260px;z-index:28}
+@media(max-width:760px){.app.discovery-mode .texture-notice{bottom:242px;left:12px;right:12px;width:auto}}
+@media(orientation:landscape) and (max-height:500px){.app.discovery-mode .texture-notice{bottom:20px;left:12px;right:290px;width:auto}}

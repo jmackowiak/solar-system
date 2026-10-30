@@ -92,6 +92,14 @@ ustawiają węzły w kierunku Słońca i pokazują ilustracyjne stożki cienia.
 Model nie prognozuje dat, widoczności ani czasu trwania zaćmień; zachowuje
 stosunek średnic Ziemi i Księżyca, z umowną skalą odległości i cieni.
 
+**Discover → Share view / Udostępnij widok** tworzy link do bieżącego obiektu,
+układu i kamery. Zachowuje też czas, szybkość, orbity, etykiety, język oraz
+ustawienia porównania, mapy, faz i podróży światła. Odbiorca zaczyna z pauzą.
+Link nie wymaga konta ani serwera; gdy schowek jest niedostępny, można skopiować
+zaznaczony adres ręcznie. Adresy są wersjonowane i walidowane; błędne parametry
+otwierają zwykły atlas. Ten sam kadr 3D może wyglądać inaczej przy innej proporcji
+ekranu. Nie zapisujemy daty rzeczywistej ani efemeryd.
+
 ## Testy
 
 ```sh
@@ -150,7 +158,7 @@ po dwóch kolejnych dwusekundowych próbkach poniżej 42 FPS; nie oscyluje w gó
 Po ukryciu karty Canvas przechodzi w `never`, a po powrocie zerowana jest baza
 czasu. Gdy czas stoi, pozostaje `demand`; kontrolki i loty żądają potrzebnych klatek.
 
-Pomiary, warunki i znane ograniczenia: [docs/VERIFICATION.md](docs/VERIFICATION.md).
+Pomiary, warunki i znane ograniczenia: [aktualna weryfikacja rozszerzeń](docs/DISCOVERY-VERIFICATION.md) oraz [raport historyczny](docs/VERIFICATION.md).
 Powtarzalny pomiar (po buildzie, osobny terminal z podglądem na 4174):
 
 ```sh
@@ -252,3 +260,8 @@ przechodzi na lewy bok. Pełne kontrolki pauzy, tempa i resetu pozostają dostę
 [Zweryfikowane rozmiary i scenariusze mobilne](docs/MOBILE.md).
 
 [Model eliptycznych orbit NASA/JPL i jego uproszczenia](docs/ORBITS.md).
+
+Pomiar nowych trybów (po buildzie, przy działającym preview na porcie 4174):
+`HEADED=1 node scripts/measure-discovery.mjs`. Nie uruchamiaj go równolegle
+z innym benchmarkiem lub testami WebGL. Wynik zapisuje lokalny, ignorowany plik
+`artifacts/discovery-performance.json`; szeroki i wąski widok korzystają z tego samego komputera.

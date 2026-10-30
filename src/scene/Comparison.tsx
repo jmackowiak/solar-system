@@ -13,27 +13,29 @@ const texturedBodies = new Set([
   "mercury", "venus", "earth", "mars", "jupiter", "saturn", "uranus", "neptune",
 ]);
 
-function ComparedBody({ body, radius, x, high, host, portal }: {
+function ComparedBody({ body, radius, x, high, host, portal, onTexture, textureVersion }: {
   body: Body;
   radius: number;
   x: number;
   high: boolean;
   host: RefObject<Group | null>;
   portal: RefObject<HTMLDivElement | null>;
+  onTexture: (ok:boolean)=>void;
+  textureVersion: number;
 }) {
   const invalidate = useThree((state) => state.invalidate);
   const [maps, setMaps] = useState<{
     id: string; low?: Texture; high?: Texture; cloud?: Texture;
   }>({ id: "" });
   const textured = texturedBodies.has(body.id);
-  const requestKey = `${body.id}-${high ? "high" : "low"}`;
+  const requestKey = `${body.id}-${high ? "high" : "low"}-${textureVersion}`;
   useEffect(() => {
     if (!textured) return;
     let disposed = false;
     const owned: Texture[] = [];
     const loader = new TextureLoader();
     const load = (url: string, kind: "low" | "high" | "cloud") => {
-      loader.load(url, (texture) => {
+      loader.load(`${url}?v=${textureVersion}`, (texture) => {
         if (disposed) { texture.dispose(); return; }
         owned.push(texture);
         texture.colorSpace = kind === "cloud" ? NoColorSpace : SRGBColorSpace;
@@ -42,9 +44,10 @@ function ComparedBody({ body, radius, x, high, host, portal }: {
           ...(previous.id === requestKey ? previous : { id: requestKey }),
           [kind]: texture,
         }));
+        onTexture(true);
         invalidate();
       }, undefined, () => {
-        // The coloured sphere remains usable if a local image cannot be read.
+        if (!disposed) onTexture(false);
         invalidate();
       });
     };
@@ -56,7 +59,7 @@ function ComparedBody({ body, radius, x, high, host, portal }: {
       disposed = true;
       owned.forEach((texture) => texture.dispose());
     };
-  }, [body.id, textured, high, requestKey, invalidate]);
+  }, [body.id, textured, high, requestKey, invalidate, onTexture, textureVersion]);
   const currentMaps = maps.id === requestKey ? maps : undefined;
   const map = currentMaps?.high || currentMaps?.low;
   // Procedural relief uses the physical mesh radius in scene units.
@@ -88,12 +91,14 @@ function ComparedBody({ body, radius, x, high, host, portal }: {
 }
 
 /** Two static spheres in one physical scale. Engine alone owns the camera. */
-export default function Comparison({ left, right, high, portal, onReady }: {
+export default function Comparison({ left, right, high, portal, onReady, onTexture, textureVersion }: {
   left: Body;
   right: Body;
   high: boolean;
   portal: RefObject<HTMLDivElement | null>;
   onReady: () => void;
+  onTexture: (ok:boolean)=>void;
+  textureVersion:number;
 }) {
   const host = useRef<Group>(null);
   const invalidate = useThree((state) => state.invalidate);
@@ -106,9 +111,9 @@ export default function Comparison({ left, right, high, portal, onReady }: {
         <pointLight color="#fff5e7" intensity={2.8} decay={0} />
       </group>
       <ComparedBody body={left} radius={layout.leftRadius} x={layout.leftX}
-        high={high} host={host} portal={portal} />
+        high={high} host={host} portal={portal} onTexture={onTexture} textureVersion={textureVersion}/>
       <ComparedBody body={right} radius={layout.rightRadius} x={layout.rightX}
-        high={high} host={host} portal={portal} />
+        high={high} host={host} portal={portal} onTexture={onTexture} textureVersion={textureVersion}/>
     </group>
   );
 }
