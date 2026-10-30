@@ -63,6 +63,12 @@ Bez WebGL 2 lub po utracie kontekstu dostępny jest atlas 2D z pełnymi opisami.
 Adres `/?fallback=1` pozwala obejrzeć ten wariant. Przycisk ponowienia tekstur
 zachowuje funkcjonalną scenę podczas błędu wczytywania.
 
+**Discover / Odkrywaj → Size comparison / Porównanie rozmiarów** otwiera dwa
+obiekty w jednej skali średnic. Do wyboru są planety, egzoplanety oraz księżyce.
+Pierścienie nie są wliczane do średnicy bryły; rozmiary egzoplanet pozostają
+oszacowaniami obserwacyjnymi. Widok zatrzymuje zegar orbit do powrotu, działa
+również w 2D i nie tworzy drugiego Canvas. [Założenia](docs/COMPARISON.md).
+
 ## Testy
 
 ```sh

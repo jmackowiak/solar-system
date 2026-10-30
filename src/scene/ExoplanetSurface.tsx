@@ -1,7 +1,7 @@
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import type { RefObject } from "react";
 import { Color, Vector3, Vector4 } from "three";
-import type { Group } from "three";
+import type { Group, ShaderMaterial } from "three";
 import type { Body } from "../data/bodies";
 
 interface SurfaceStyle {
@@ -182,6 +182,7 @@ void main() {
 
 /** An opaque, texture-free artist's impression. Mount as the sphere's material. */
 export default function ExoplanetSurface({ body, high, host }: { body: Body; high: boolean; host: RefObject<Group | null> }) {
+  const material = useRef<ShaderMaterial>(null);
   const style = styles[body.id];
   const uniforms = useMemo(() => {
     const palette = styles[body.id]?.colors ?? ["#494644", body.color, "#bdb4a3"];
@@ -223,10 +224,17 @@ export default function ExoplanetSurface({ body, high, host }: { body: Body; hig
 
   return (
     <shaderMaterial
+      ref={material}
       key={`${body.id}-${high ? "high" : "low"}`}
       name={`Exoplanet surface ${body.id}`}
       uniforms={uniforms}
-      onBeforeRender={() => host.current?.getWorldPosition(uniforms.uHostPosition.value)}
+      onBeforeRender={() => {
+        const position = material.current?.uniforms.uHostPosition.value as Vector3 | undefined;
+        if (position) {
+          if (host.current) host.current.getWorldPosition(position);
+          else position.set(0, 0, 0);
+        }
+      }}
       defines={defines}
       vertexShader={vertexShader}
       fragmentShader={fragmentShader}

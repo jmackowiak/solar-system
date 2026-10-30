@@ -3,7 +3,7 @@ import type { Language } from "../i18n";
 import type { Simulation } from "../lib/simulation";
 import type { Body } from "../data/bodies";
 import type { SystemId } from "../data/systems";
-export type ViewMode = "solar" | "galaxy";
+export type ViewMode = "solar" | "galaxy" | "compare";
 export type Quality = "auto" | "low" | "high";
 export interface SceneProps {
   language: Language;
@@ -12,6 +12,7 @@ export interface SceneProps {
   bodies: readonly Body[];
   starColor: string;
   moonParent: string | null;
+  comparison: { left: Body; right: Body };
   onEnterSolar: () => void;
   simulation: MutableRefObject<Simulation>;
   selected: string | null;

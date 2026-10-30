@@ -5,6 +5,8 @@ import { OrbitControls as Controls } from "three/addons/controls/OrbitControls.j
 import * as THREE from "three";
 import ExoplanetSurface from "./ExoplanetSurface";
 import MoonSurface from "./MoonSurface";
+import Comparison from "./Comparison";
+import { comparisonLayout } from "../lib/comparison";
 import { worldPosition } from "../lib/world-position";
 import { translate } from "../i18n";
 import type { Body } from "../data/bodies";
@@ -475,7 +477,7 @@ function Engine({
       lastFrame.current = 0;
       c.maxDistance = Math.max(
         c.getDistance(),
-        selectedRef.current.mode === "galaxy"
+        selectedRef.current.mode === "compare" ? c.maxDistance : selectedRef.current.mode === "galaxy"
           ? 500
           : selectedRef.current.radius
             ? selectedRef.current.radius * 24
@@ -504,6 +506,24 @@ function Engine({
   useEffect(() => {
     const c = controls.current;
     if (!c) return;
+    c.enableRotate = props.mode !== "compare";
+    if (props.mode === "compare") {
+      flight.current = null;
+      scaleTransition.current = null;
+      worlds.blend.value = 0;
+      transitionMode.current = props.mode;
+      c.enableDamping = false;
+      c.target.set(0, -0.3, 0);
+      const layout = comparisonLayout(props.comparison.left.diameterKm, props.comparison.right.diameterKm);
+      const height = Math.max(9, (layout.width + 1.8) / Math.max(size.width / size.height, 0.15));
+      const fit = height / (2 * Math.tan(23 * Math.PI / 180));
+      camera.position.set(0, -0.3, fit);
+      c.minDistance = fit * 0.85;
+      c.maxDistance = fit * 3;
+      c.update();
+      invalidate();
+      return;
+    }
     if (transitionMode.current !== props.mode) {
       scaleTransition.current = { from: worlds.blend.value, elapsed: 0 };
       transitionMode.current = props.mode;
@@ -541,6 +561,12 @@ function Engine({
   }, [props.mode, props.selected, props.navigation]);
   useEffect(() => {
     const c = controls.current;
+    if (props.mode === "compare" && c) {
+      const layout = comparisonLayout(props.comparison.left.diameterKm, props.comparison.right.diameterKm);
+      const fit = Math.max(9, (layout.width + 1.8) / Math.max(size.width / size.height, 0.15)) / (2 * Math.tan(23 * Math.PI / 180));
+      c.target.set(0,-0.3,0); camera.position.set(0,-0.3,fit);
+      c.minDistance=fit*.85; c.maxDistance=fit*3; c.update(); invalidate(); return;
+    }
     if (props.mode !== "galaxy" || !c || flight.current) return;
     const fit = Math.max(110, 138 / Math.max(size.width / size.height, 0.2));
     if (c.getDistance() < fit) {
@@ -549,7 +575,7 @@ function Engine({
       c.update();
       invalidate();
     }
-  }, [size.width, size.height, props.mode, camera, invalidate, temp]);
+  }, [size.width, size.height, props.mode, props.comparison.left.diameterKm, props.comparison.right.diameterKm, camera, invalidate, temp]);
   const paused = props.simulation.current.paused;
   const speed = props.simulation.current.speed;
   useEffect(() => {
@@ -584,7 +610,7 @@ function Engine({
       if (
         !ready &&
         gl.info.render.calls > 0 &&
-        (props.mode === "solar" || worlds.galaxyReady.current)
+        (props.mode !== "galaxy" || worlds.galaxyReady.current)
       ) {
         ready = true;
         props.onReady();
@@ -637,7 +663,7 @@ function Engine({
     const blend = worlds.blend.value,
       solarScale = Math.exp(-blend * 11.5);
     if (worlds.solar.current) {
-      worlds.solar.current.visible = blend < 0.99999;
+      worlds.solar.current.visible = props.mode !== "compare" && blend < 0.99999;
       worlds.solar.current.scale.setScalar(solarScale);
       worlds.solar.current.position.set(
         solarPosition[0] * blend,
@@ -645,7 +671,7 @@ function Engine({
         solarPosition[2] * blend,
       );
     }
-    if (worlds.galaxy.current) worlds.galaxy.current.visible = blend > 0.00001;
+    if (worlds.galaxy.current) worlds.galaxy.current.visible = props.mode !== "compare" && blend > 0.00001;
 
     const c = controls.current;
     if (!c) return;
@@ -737,7 +763,7 @@ function Engine({
       el.dataset.days = String(sim.days);
       el.dataset.flight = String(!!flight.current);
       el.dataset.target =
-        props.mode === "galaxy" ? "galaxy" : props.selected || "overview";
+        props.mode !== "solar" ? props.mode : props.selected || "overview";
 
       el.dataset.camera = camera.position
         .toArray()
@@ -852,6 +878,7 @@ export default function SolarScene(props: SceneProps) {
           high={high}
           worlds={worlds}
         />
+        {props.mode === "compare" && <Comparison left={props.comparison.left} right={props.comparison.right} high={high} portal={portal} onReady={invalidateGal.current} />}
         <group ref={solarWorld}>
           <pointLight
             position={[0, 0, 0]}

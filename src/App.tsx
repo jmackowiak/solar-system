@@ -19,6 +19,8 @@ import type { Language } from "./i18n";
 import { control, initialSimulation } from "./lib/simulation";
 import type { Quality } from "./scene/types";
 import Icon from "./Icon";
+import ComparisonPanel from "./ComparisonPanel";
+import "./discovery.css";
 import GalaxyPanel, { GalaxyFallback } from "./GalaxyPanel";
 import type { ViewMode } from "./scene/types";
 const SolarScene = lazy(() => import("./scene/SolarScene"));
@@ -92,6 +94,10 @@ export default function App() {
   const moonContext = useRef<{ parent: string; speed: number } | null>(null);
   const sceneBodies = useMemo(() => [...bodies, ...moonBodies.filter(m => m.parentId === moonParent)], [bodies, moonBodies, moonParent]);
   const [mode, setMode] = useState<ViewMode>("solar");
+  const [explore, setExplore] = useState(false);
+  const [pair, setPair] = useState<[string,string]>(["earth","jupiter"]);
+  const comparisonCatalog = useMemo(()=>[...planetarySystems.flatMap(s=>getSystemBodies(s.id,language).slice(1)),...getMoons(language)], [language]);
+  const comparison = {left:comparisonCatalog.find(b=>b.id===pair[0])!,right:comparisonCatalog.find(b=>b.id===pair[1])!};
   const stops = language === "en" ? englishTourStops : polishStops;
   const [reduced, setReduced] = useState(
     () => matchMedia("(prefers-reduced-motion: reduce)").matches,
@@ -158,6 +164,7 @@ export default function App() {
     }
     if (!fallback) setReady(false);
     setMode("solar");
+    setExplore(false);
     setSelected(null);
     setTour(null);
     setSettings(false);
@@ -209,6 +216,7 @@ export default function App() {
   const home = useCallback(() => {
     leaveMoons();
     setMode("solar");
+    setExplore(false);
     setSelected(null);
     setNavigation((n) => n + 1);
     setTour(null);
@@ -220,7 +228,7 @@ export default function App() {
       restoreFocus.current = false;
       lastTrigger.current?.focus({ preventScroll: true });
     }
-  }, [selected]);
+  }, [selected, mode]);
   useEffect(() => {
     const query = matchMedia("(max-width: 760px), (max-height: 500px)");
     const change = (event: MediaQueryListEvent) => setCollapsed(event.matches && tour === null);
@@ -233,6 +241,9 @@ export default function App() {
         if (about) {
           setAbout(false);
           aboutButton.current?.focus();
+        } else if (explore) {
+          setExplore(false);
+          document.querySelector<HTMLButtonElement>(".discovery-trigger")?.focus();
         } else if (settings) {
           setSettings(false);
           settingsButton.current?.focus();
@@ -252,7 +263,7 @@ export default function App() {
     };
     window.addEventListener("keydown", key);
     return () => window.removeEventListener("keydown", key);
-  }, [about, settings, home, mode]);
+  }, [about, settings, explore, home, mode]);
   useEffect(() => {
     if (about) aboutDialog.current?.showModal();
     else aboutDialog.current?.close();
@@ -288,8 +299,10 @@ export default function App() {
   };
   const switchMode = (next: ViewMode) => {
     leaveMoons();
+    if (next === "compare") lastTrigger.current = document.querySelector<HTMLButtonElement>(".discovery-trigger");
     if (mode !== next && !fallback) setReady(false);
     setMode(next);
+    setExplore(false);
     setSelected(null);
     setTour(null);
     setSettings(false);
@@ -316,7 +329,7 @@ export default function App() {
     }).format(n);
   return (
     <main
-      className={`app ${body || mode === "galaxy" ? "has-selection" : ""} ${mode === "galaxy" ? "galaxy-mode" : "solar-mode"} ${!isSolar ? "exoplanet-mode" : ""} ${moonParent ? "moon-mode" : ""} ${reduced ? "reduced" : ""}`}
+      className={`app ${body || mode === "galaxy" ? "has-selection" : ""} ${mode === "galaxy" ? "galaxy-mode" : "solar-mode"} ${!isSolar ? "exoplanet-mode" : ""} ${moonParent ? "moon-mode" : ""} ${mode === "compare" ? "discovery-mode compare-mode" : ""} ${reduced ? "reduced" : ""}`}
     >
       <div
         className="space"
@@ -324,7 +337,7 @@ export default function App() {
         data-ready={ready ? "true" : "false"}
         data-mode={mode}
         data-system={systemId}
-        data-target={mode === "galaxy" ? "galaxy" : selected || "overview"}
+        data-target={mode !== "solar" ? mode : selected || "overview"}
         data-flight="false"
         data-frames="0"
         data-draws="0"
@@ -344,6 +357,7 @@ export default function App() {
                 systemId={systemId}
                 bodies={sceneBodies}
                 moonParent={moonParent}
+                comparison={comparison}
                 starColor={system.starColor}
                 onEnterSolar={enterSolar}
                 language={language}
@@ -364,7 +378,7 @@ export default function App() {
               />
             </Suspense>
           </SceneBoundary>
-        ) : mode === "galaxy" ? (
+        ) : mode === "compare" ? null : mode === "galaxy" ? (
           <GalaxyFallback language={language} onEnter={enterSolar} />
         ) : (
           <div className="fallback" data-testid="fallback">
@@ -579,7 +593,9 @@ export default function App() {
           {moonBodies.filter(m=>m.parentId===moonParent).map(m=><button key={m.id} aria-label={`${t("Wybierz")} ${m.name}`} aria-pressed={selected===m.id} onClick={()=>select(m.id)}><span style={{background:m.color}} />{m.name}</button>)}
         </nav>
       )}
+      {mode === "compare" && <ComparisonPanel language={language} left={comparison.left} right={comparison.right} catalog={comparisonCatalog} onLeft={id=>setPair(p=>[id,p[1]])} onRight={id=>setPair(p=>[p[0],id])} onClose={home} fallback={fallback} />}
       <div className="scene-tools">
+        <button className="tool-button discovery-trigger" aria-label={language === "en" ? "Explore tools" : "Narzędzia odkrywania"} aria-expanded={explore} onClick={()=>{setExplore(v=>!v);setSettings(false);}}><Icon name="plus"/><span>{language === "en" ? "Discover" : "Odkrywaj"}</span></button>
         {parentMoons.length > 0 && !moonParent && mode === "solar" && <button className="tool-button moon-entry" aria-label={t("Odkrywaj księżyce")} onClick={()=>{enterMoons(navParent!);setNavigation(n=>n+1);}}><Icon name="moon"/><span>{t("Księżyce")}</span></button>}
         <button
           className="tool-button"
@@ -605,6 +621,7 @@ export default function App() {
           <span>{t("Widok")}</span>
         </button>
       </div>
+      {explore && <nav className="discovery-menu" aria-label={language === "en" ? "Discovery tools" : "Narzędzia odkrywania"}><button onClick={()=>switchMode("compare")}>{language === "en" ? "Size comparison" : "Porównanie rozmiarów"}<Icon name="arrow" size={15}/></button></nav>}
       {settings && (
         <section className="settings-panel" aria-label={t("Ustawienia widoku")}>
           <div className="panel-top">
