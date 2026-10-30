@@ -24,6 +24,8 @@ import LightPanel from "./LightPanel";
 import LightFallback from "./LightFallback";
 import NeighborhoodPanel from "./NeighborhoodPanel";
 import NeighborhoodFallback from "./NeighborhoodFallback";
+import PhasesPanel from "./PhasesPanel";
+import PhasesFallback from "./PhasesFallback";
 import { advanceLight, type LightClock } from "./lib/light-clock";
 import GalaxyPanel, { GalaxyFallback } from "./GalaxyPanel";
 import type { ViewMode } from "./scene/types";
@@ -103,6 +105,8 @@ export default function App() {
   const [lightVersion,setLightVersion]=useState(0);
   const [lightTarget,setLightTarget]=useState("earth");
   const [neighborhoodRange,setNeighborhoodRange]=useState<100|3000>(100);
+  const [phaseAngle,setPhaseAngle]=useState(0);
+  const [eclipseScenario,setEclipseScenario]=useState<"phases"|"solar"|"lunar">("phases");
   const solarBodies=useMemo(()=>getSystemBodies("solar",language),[language]);
   const [pair, setPair] = useState<[string,string]>(["earth","jupiter"]);
   const comparisonCatalog = useMemo(()=>[...planetarySystems.flatMap(s=>getSystemBodies(s.id,language).slice(1)),...getMoons(language)], [language]);
@@ -377,6 +381,8 @@ export default function App() {
                 lightTarget={lightTarget}
                 solarBodies={solarBodies}
                 neighborhoodRange={neighborhoodRange}
+                phaseAngle={phaseAngle}
+                eclipseScenario={eclipseScenario}
                 onSystem={changeSystem}
                 onNeighborhood={()=>switchMode("neighborhood")}
                 starColor={system.starColor}
@@ -614,6 +620,8 @@ export default function App() {
           {moonBodies.filter(m=>m.parentId===moonParent).map(m=><button key={m.id} aria-label={`${t("Wybierz")} ${m.name}`} aria-pressed={selected===m.id} onClick={()=>select(m.id)}><span style={{background:m.color}} />{m.name}</button>)}
         </nav>
       )}
+      {mode === "phases" && fallback && <PhasesFallback angle={phaseAngle} scenario={eclipseScenario} language={language}/>}
+      {mode === "phases" && <PhasesPanel language={language} angle={phaseAngle} scenario={eclipseScenario} onAngle={setPhaseAngle} onScenario={scenario=>{setEclipseScenario(scenario);if(scenario!=="phases")setPhaseAngle(scenario==="solar"?0:180);}} onClose={home}/>}
       {mode === "neighborhood" && fallback && <NeighborhoodFallback range={neighborhoodRange} language={language}/>}
       {mode === "neighborhood" && <NeighborhoodPanel language={language} range={neighborhoodRange} onRange={setNeighborhoodRange} onSystem={changeSystem} onClose={home}/>}
       {mode === "light" && fallback && <LightFallback clock={lightClock} bodies={solarBodies} target={lightTarget} language={language}/>}
@@ -646,7 +654,7 @@ export default function App() {
           <span>{t("Widok")}</span>
         </button>
       </div>
-      {explore && <nav className="discovery-menu" aria-label={language === "en" ? "Discovery tools" : "Narzędzia odkrywania"}><button onClick={()=>switchMode("compare")}>{language === "en" ? "Size comparison" : "Porównanie rozmiarów"}<Icon name="arrow" size={15}/></button><button onClick={()=>switchMode("neighborhood")}>{language === "en" ? "Solar neighborhood" : "Sąsiedztwo Słońca"}<Icon name="arrow" size={15}/></button><button onClick={()=>switchMode("light")}>{language === "en" ? "Light journey" : "Podróż światła"}<Icon name="arrow" size={15}/></button></nav>}
+      {explore && <nav className="discovery-menu" aria-label={language === "en" ? "Discovery tools" : "Narzędzia odkrywania"}><button onClick={()=>switchMode("compare")}>{language === "en" ? "Size comparison" : "Porównanie rozmiarów"}<Icon name="arrow" size={15}/></button><button onClick={()=>switchMode("phases")}>{language === "en" ? "Moon phases & eclipses" : "Fazy Księżyca i zaćmienia"}<Icon name="arrow" size={15}/></button><button onClick={()=>switchMode("neighborhood")}>{language === "en" ? "Solar neighborhood" : "Sąsiedztwo Słońca"}<Icon name="arrow" size={15}/></button><button onClick={()=>switchMode("light")}>{language === "en" ? "Light journey" : "Podróż światła"}<Icon name="arrow" size={15}/></button></nav>}
       {settings && (
         <section className="settings-panel" aria-label={t("Ustawienia widoku")}>
           <div className="panel-top">

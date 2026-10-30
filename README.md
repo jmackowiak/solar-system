@@ -85,6 +85,13 @@ współrzędnych galaktycznych według ESA Gaia. Te same układy są zaznaczone
 w pełnej Drodze Mlecznej; pobliskie gwiazdy nakładają się w jej ogromnej skali.
 To wybór czterech dostępnych układów, a nie kompletny katalog gwiazd.
 
+**Discover → Moon phases & eclipses / Fazy Księżyca i zaćmienia** pozwala
+ustawiać położenie Księżyca suwakiem oraz przechodzić między czterema fazami.
+Tarcza pokazuje widok z Ziemi, a scena geometrię orbity. Scenariusze zaćmień
+ustawiają węzły w kierunku Słońca i pokazują ilustracyjne stożki cienia.
+Model nie prognozuje dat, widoczności ani czasu trwania zaćmień; zachowuje
+stosunek średnic Ziemi i Księżyca, z umowną skalą odległości i cieni.
+
 ## Testy
 
 ```sh

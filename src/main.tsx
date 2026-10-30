@@ -5,6 +5,7 @@ import "./styles.css";
 import "./discovery.css";
 import "./light.css";
 import "./neighborhood.css";
+import "./phases.css";
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <App />

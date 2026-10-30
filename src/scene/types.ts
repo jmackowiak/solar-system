@@ -4,7 +4,7 @@ import type { Simulation } from "../lib/simulation";
 import type { Body } from "../data/bodies";
 import type { LightClock } from "../lib/light-clock";
 import type { SystemId } from "../data/systems";
-export type ViewMode = "solar" | "galaxy" | "compare" | "light" | "neighborhood";
+export type ViewMode = "solar" | "galaxy" | "compare" | "light" | "neighborhood" | "phases";
 export type Quality = "auto" | "low" | "high";
 export interface SceneProps {
   language: Language;
@@ -18,6 +18,8 @@ export interface SceneProps {
   lightVersion: number;
   lightTarget: string;
   neighborhoodRange: 100 | 3000;
+  phaseAngle: number;
+  eclipseScenario: "phases" | "solar" | "lunar";
   onSystem: (id: SystemId) => void;
   onNeighborhood: () => void;
   solarBodies: readonly Body[];

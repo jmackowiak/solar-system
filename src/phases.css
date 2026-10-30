@@ -1,0 +1,84 @@
+.phases-mode .space { right: 340px; }
+.phases-mode .labels-portal { right: 340px; }
+.phases-panel { position: absolute; z-index: 20; top: 154px; right: 24px; bottom: 28px; width: 308px; padding: 20px; border: 1px solid #ffffff12; border-radius: 16px; background: #0c141bef; overflow-y: auto; overscroll-behavior: contain; touch-action: pan-y; }
+.phases-panel-heading { display: flex; align-items: center; justify-content: space-between; gap: 4px; }
+.phases-panel-heading .eyebrow { font-size: 8px; }
+.phases-panel-heading h2 { font: 500 23px Manrope, sans-serif; margin: 8px 0 0; letter-spacing: -.6px; }
+.phases-panel-heading .round-button { width: 44px; height: 44px; flex: 0 0 44px; }
+.phases-scenario { margin-top: 20px; }
+.phases-scenario label { display: block; font-size: 10px; color: #9aabb6; margin-bottom: 7px; }
+.phases-scenario select { width: 100%; height: 44px; padding: 0 10px; border: 1px solid #ffffff1b; border-radius: 8px; background: #111d27; color: #e3e9ec; font-size: 12px; }
+.phases-observation { display: flex; align-items: center; gap: 14px; margin: 22px 0 16px; }
+.phases-observation > svg { width: 72px; height: 72px; }
+.phases-observation > div { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; }
+.phases-observation .eyebrow { font-size: 8px; letter-spacing: .1em; }
+.phases-observation strong { font: 500 17px Manrope, sans-serif; }
+.phases-observation > div > span:not(.eyebrow), .phases-observation small { font-size: 11px; color: #abb9c3; }
+.phases-observation b { font-weight: 500; color: var(--accent); }
+.phases-slider label { display: flex; justify-content: space-between; font-size: 11px; color: #b7c4cc; }
+.phases-slider output { color: var(--accent); }
+.phases-slider input { display: block; width: 100%; height: 44px; margin: 0; accent-color: var(--accent); }
+.phases-presets { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
+.phases-presets button { min-height: 44px; border: 1px solid #ffffff15; border-radius: 7px; padding: 4px; font-size: 10px; }
+.phases-presets button[aria-pressed="true"] { color: var(--accent); border-color: #dfb88b65; background: #dfb88b0e; }
+.phases-alignment { font-size: 12px; color: #b9c6cd; line-height: 1.7; margin: 20px 0 8px; }
+.phases-notes { color: #a5b4be; font-size: 11px; line-height: 1.65; }
+.phases-notes summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; color: #d6dee3; }
+.phases-notes summary::before { content: "+"; margin-right: 8px; color: var(--accent); }
+.phases-notes[open] summary::before { content: "−"; }
+.phases-notes summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.phases-notes p { margin: 0 0 12px; }
+.phases-notes a { display: flex; align-items: center; color: #d0af89; min-height: 44px; }
+.phases-model-note { display: block; margin-top: 6px; font-size: 9px; color: #889ba8; }
+.phases-scene-label { padding: 4px 6px; border-radius: 4px; background: #080c10d9; white-space: nowrap; font-size: 10px; color: #b8c6ce; }
+.phases-scene-label.sunlight { color: #dfbd92; }
+.phases-scene-label.umbra { font-size: 9px; color: #9db7c9; }
+@media (max-width: 760px) {
+  .app.phases-mode .space { top: 174px; right: 0; left: 0; bottom: calc(216px + env(safe-area-inset-bottom)); }
+  .app.phases-mode .labels-portal { right: 0; left: 0; }
+  .phases-panel { top: auto; left: 12px; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom)); width: auto; max-height: 55svh; padding: 10px 12px; border-radius: 13px; display: grid; grid-template-columns: 76px 1fr; gap: 0 12px; }
+  .phases-panel-heading { grid-column: 1 / -1; height: 30px; }
+  .phases-panel-heading .eyebrow { display: none; }
+  .phases-panel-heading h2 { font-size: 16px; margin: 0; letter-spacing: -.2px; }
+  .phases-scenario { grid-column: 2; grid-row: 2; margin-top: 4px; }
+  .phases-scenario label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .phases-scenario select { height: 36px; font-size: 11px; }
+  .phases-observation { grid-column: 1; grid-row: 2 / 4; margin: 0; flex-direction: column; gap: 1px; justify-content: center; }
+  .phases-observation > svg { width: 52px; height: 52px; }
+  .phases-observation > div { align-items: center; gap: 2px; text-align: center; }
+  .phases-observation .eyebrow, .phases-observation small { display: none; }
+  .phases-observation strong { display: block; font-size: 9px; line-height: 1.2; max-width: 76px; }
+  .phases-observation > div > span:not(.eyebrow) { font-size: 9px; }
+  .phases-slider { grid-column: 2; grid-row: 3; margin-top: 6px; }
+  .phases-slider label { font-size: 10px; }
+  .phases-slider input { height: 32px; }
+  .phases-presets { grid-column: 1 / -1; margin-top: 3px; }
+  .phases-presets button { min-height: 32px; font-size: 9px; }
+  .phases-alignment { display: none; }
+  .phases-notes { grid-column: 1 / -1; margin-top: 0; }
+  .phases-notes summary { min-height: 28px; font-size: 10px; }
+  .phases-model-note { grid-column: 1 / -1; font-size: 8px; margin-top: 1px; }
+  .phases-scene-label { font-size: 9px; }
+}
+@media (max-height: 500px) and (orientation: landscape) {
+  .app.phases-mode .space { top: 60px; left: 0; right: 266px; bottom: 20px; }
+  .app.phases-mode .labels-portal { right: 266px; }
+  .phases-panel { top: 60px; left: auto; right: 12px; bottom: 12px; width: 254px; max-height: none; padding: 12px; display: block; }
+  .phases-panel-heading .eyebrow { display: none; }
+  .phases-panel-heading h2 { font-size: 17px; margin: 0; }
+  .phases-scenario { margin-top: 8px; }
+  .phases-scenario label { display: none; }
+  .phases-observation { flex-direction: row; margin: 10px 0; gap: 10px; }
+  .phases-observation > svg { width: 48px; height: 48px; }
+  .phases-observation > div { align-items: flex-start; text-align: left; }
+  .phases-observation strong { display: block; font-size: 13px; }
+  .phases-presets { margin-top: 0; }
+  .phases-alignment { display: block; font-size: 10px; margin-top: 10px; }
+}
+.app.discovery-mode.phases-mode .space{top:140px;bottom:48px;left:24px;right:356px}
+.app.discovery-mode.phases-mode .scene-tools{right:364px;top:148px}
+@media(max-width:760px){.app.discovery-mode.phases-mode .space{top:124px;bottom:240px;left:12px;right:12px}.app.discovery-mode.phases-mode .scene-tools{right:12px;top:124px}.phases-panel{max-height:212px}.phases-presets button{min-height:44px}.phases-slider input{height:44px}.phases-panel-heading{min-height:44px}}
+@media(orientation:landscape) and (max-height:500px){.app.discovery-mode.phases-mode .space{top:56px;bottom:20px;left:12px;right:278px}.app.discovery-mode.phases-mode .scene-tools{right:286px;top:60px}.phases-panel{max-height:none}}
+.phases-fallback{position:absolute;left:5%;right:356px;top:22%;color:#9cacb7}.phases-fallback svg{width:100%;max-height:460px}.phases-fallback p{font-size:10px;text-align:center}
+@media(max-width:760px){.phases-fallback{left:12px;right:12px;top:20%}.phases-scenario select{height:44px}}
+@media(orientation:landscape) and (max-height:500px){.phases-fallback{left:12px;right:278px;top:14%}}

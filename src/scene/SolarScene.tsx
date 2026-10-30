@@ -8,6 +8,8 @@ import MoonSurface from "./MoonSurface";
 import Comparison from "./Comparison";
 import LightTravel from "./LightTravel";
 import Neighborhood from "./Neighborhood";
+import MoonPhases from "./MoonPhases";
+import { illuminatedFraction } from "../lib/discovery";
 import { planetarySystems } from "../data/systems";
 import { advanceLight } from "../lib/light-clock";
 import { comparisonLayout } from "../lib/comparison";
@@ -510,7 +512,12 @@ function Engine({
   useEffect(() => {
     const c = controls.current;
     if (!c) return;
-    c.enableRotate = props.mode !== "compare" && props.mode !== "light";
+    c.enableRotate = props.mode !== "compare" && props.mode !== "light" && props.mode !== "phases";
+    if(props.mode === "phases") {
+      flight.current=null; scaleTransition.current=null; worlds.blend.value=0; transitionMode.current=props.mode;
+      const fit=Math.max(22,24/Math.max(size.width/size.height,.15));
+      c.target.set(0,0,0); camera.position.set(0,fit*.75,fit*.65); c.minDistance=fit*.8; c.maxDistance=fit*3; c.enableDamping=false; c.update(); invalidate(); return;
+    }
     if (props.mode === "neighborhood") {
       flight.current=null; scaleTransition.current=null; worlds.blend.value=0; transitionMode.current=props.mode;
       const r=props.neighborhoodRange/100,fit=Math.max(r*3.3,r*3.4/Math.max(size.width/size.height,.15));
@@ -576,6 +583,10 @@ function Engine({
   }, [props.mode, props.selected, props.navigation]);
   useEffect(() => {
     const c = controls.current;
+    if(props.mode === "phases" && c) {
+      const fit=Math.max(22,24/Math.max(size.width/size.height,.15));
+      c.target.set(0,0,0); camera.position.set(0,fit*.75,fit*.65); c.minDistance=fit*.8; c.maxDistance=fit*3; c.update(); invalidate(); return;
+    }
     if (props.mode === "neighborhood" && c) {
       const r=props.neighborhoodRange/100,fit=Math.max(r*3.3,r*3.4/Math.max(size.width/size.height,.15));
       c.target.set(0,0,0); camera.position.set(.35*fit,.6*fit,.8*fit); c.minDistance=r*.4; c.maxDistance=r*12; c.update(); invalidate(); return;
@@ -643,6 +654,13 @@ function Engine({
         el.dataset.draws = String(gl.info.render.calls);
         el.dataset.triangles = String(gl.info.render.triangles);
         el.dataset.points = String(gl.info.render.points);
+        if(props.mode === "phases") {
+          el.dataset.phaseAngle=String(props.phaseAngle);
+          el.dataset.phaseFraction=String(illuminatedFraction(props.phaseAngle*Math.PI/180));
+          el.dataset.eclipseScenario=props.eclipseScenario;
+          el.dataset.eclipseShadow=String(!!scene.getObjectByName("phase-shadow")?.visible);
+          el.dataset.moonPosition=scene.getObjectByName("phase-moon")?.getWorldPosition(new THREE.Vector3()).toArray().join(",") || "";
+        }
         if(props.mode === "neighborhood" || props.mode === "galaxy") {
           const values:Record<string,number[]>={};
           for(const system of planetarySystems) {
@@ -662,7 +680,7 @@ function Engine({
     };
     // readiness is tied to an actual render of the current navigation target
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scene, gl, props.mode, props.navigation, props.onReady]);
+  }, [scene, gl, props.mode, props.navigation, props.phaseAngle, props.eclipseScenario, props.onReady]);
   useFrame((state) => {
     if (props.hidden || document.hidden) {
       lastFrame.current = 0;
@@ -916,6 +934,7 @@ export default function SolarScene(props: SceneProps) {
           high={high}
           worlds={worlds}
         />
+        {props.mode === "phases" && <MoonPhases angle={props.phaseAngle} scenario={props.eclipseScenario} language={props.language} portal={portal}/>}
         {props.mode === "neighborhood" && <Neighborhood language={props.language} range={props.neighborhoodRange} portal={portal} onSystem={props.onSystem} labels={props.labels}/>}
         {props.mode === "light" && <LightTravel clock={props.lightClock} bodies={props.solarBodies} target={props.lightTarget} portal={portal} language={props.language} />}
         {props.mode === "compare" && <Comparison left={props.comparison.left} right={props.comparison.right} high={high} portal={portal} onReady={invalidateGal.current} />}
