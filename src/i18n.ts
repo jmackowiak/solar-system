@@ -18,6 +18,14 @@ export function persistLanguage(language: Language) {
   }
 }
 export const english = {
+  "Księżyce": "Moons",
+  "KSIĘŻYC": "MOON",
+  "Odkrywaj księżyce": "Explore moons",
+  "Powrót do planety": "Back to planet",
+  "Planeta i księżyce": "Planet and moons",
+  "ODLEGŁOŚĆ OD PLANETY": "DISTANCE FROM PLANET",
+  "OBIEG WOKÓŁ PLANETY": "ORBIT AROUND PLANET",
+  "Powierzchnie księżyców są interpretacją artystyczną.": "Moon surfaces are artistic interpretations.",
   "Szczegóły": "Details",
   "Zwiń": "Collapse",
   "ATLAS UKŁADÓW PLANETARNYCH": "PLANETARY SYSTEMS ATLAS",

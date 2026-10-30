@@ -1,5 +1,8 @@
 /** NASA/JPL physical data checked 2026-10-28; J2000 orbit shapes checked 2026-10-30. */
 export interface Body {
+  /** Satellites use local orbits around this parent; planets omit it. */
+  parentId?: string;
+  distanceFromParentKm?: number;
   id: string;
   name: string;
   kind: string;

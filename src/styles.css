@@ -2451,3 +2451,23 @@ h1 > span {
   .app .system-picker { flex: 1.25; min-width: 0; margin-left: 2px; padding-left: 4px; }
   .app .system-picker select { min-width: 0; max-width: 100%; padding-left: 6px; padding-right: 18px; }
 }
+.moon-nav { position: absolute; z-index: 15; left: 232px; right: 390px; bottom: 178px; display: flex; gap: 6px; flex-wrap: wrap; }
+.moon-nav button { min-height: 44px; padding: 9px 12px; display: inline-flex; align-items: center; gap: 7px; border: 1px solid #ffffff17; background: #101922e8; border-radius: 6px; color: #aab7c0; font-size: 10px; white-space: nowrap; }
+.moon-nav button[aria-pressed="true"] { color: #e6c39a; border-color: #b6986a66; background: #25221de8; }
+.moon-nav button > span { width: 9px; height: 9px; border-radius: 50%; }
+.moon-entry { color: #d5bb98; }
+.moon-nav { pointer-events: none; }
+.moon-nav button { pointer-events: auto; }
+@media (max-width: 760px) {
+ .app.moon-mode { --mobile-base: calc(180px + env(safe-area-inset-bottom, 0px)); }
+ .app .moon-nav { bottom: calc(128px + env(safe-area-inset-bottom, 0px)); left: 0; right: 0; height: 44px; flex-wrap: nowrap; padding: 0 12px; overflow-x: auto; scrollbar-width: none; }
+ .app .moon-nav button { flex-shrink: 0; }
+ .app .moon-entry { width: auto; padding: 9px 12px; }
+ .app .moon-entry span { display: inline; font-size: 10px; }
+}
+@media (orientation: landscape) and (max-height: 500px) {
+ .app.moon-mode .object-nav { display: none; }
+ .app.moon-mode .moon-nav { top: 60px; left: 12px; bottom: 80px; right: auto; width: 116px; height: auto; padding: 0; flex-direction: column; flex-wrap: nowrap; overflow-x: hidden; overflow-y: auto; }
+ .app.moon-mode .moon-nav button { font-size: 9px; padding: 8px 5px; white-space: normal; }
+ .app .moon-entry span { display: inline; font-size: 10px; }
+}

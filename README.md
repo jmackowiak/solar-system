@@ -52,6 +52,12 @@ wybraną planetę, kamerę, czas i ustawienia symulacji.
   Preferencja systemowa `prefers-reduced-motion` jest respektowana od pierwszego widoku.
 - Wycieczka: Słońce → Ziemia → Jowisz → Saturn → Neptun. Przystanki zmienia użytkownik.
 - Na telefonie informacje są przewijanym, zwijanym panelem dolnym. Gesty panelu nie obracają sceny.
+- Przy Ziemi, Jowiszu i Saturnie wybierz **Moons / Księżyce**, aby zobaczyć układ
+  planety i jej satelitów: Księżyc, Io, Europę, Ganimedesa, Kallisto oraz Tytana.
+  Każdy satelita ma własny wybór, zbliżenie i opis NASA. Tempo zmienia się na
+  0,1 dnia/s; po wyjściu wraca poprzednia wartość, z zachowaniem czasu i pauzy.
+  Orbity księżyców są kołowym przybliżeniem, a ich powierzchnie interpretacją
+  artystyczną. Szczegóły danych i uproszczeń: [docs/MOONS.md](docs/MOONS.md).
 
 Bez WebGL 2 lub po utracie kontekstu dostępny jest atlas 2D z pełnymi opisami.
 Adres `/?fallback=1` pozwala obejrzeć ten wariant. Przycisk ponowienia tekstur

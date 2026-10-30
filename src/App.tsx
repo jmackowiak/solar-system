@@ -11,6 +11,7 @@ import {
 import type { ReactNode } from "react";
 import { getSystemBodies, planetarySystems, systemById } from "./data/systems";
 import type { SystemId } from "./data/systems";
+import { getMoons, moonParentById } from "./data/moons";
 import type { Simulation } from "./lib/simulation";
 import { englishTourStops } from "./data/body-translations";
 import { useLanguage } from "./i18n";
@@ -86,6 +87,10 @@ export default function App() {
   const systemCopy = system.copy[language];
   const isSolar = systemId === "solar";
   const initialSpeed = isSolar ? 8 : 0.25;
+  const moonBodies = useMemo(() => isSolar ? getMoons(language) : [], [isSolar, language]);
+  const [moonParent, setMoonParent] = useState<string | null>(null);
+  const moonContext = useRef<{ parent: string; speed: number } | null>(null);
+  const sceneBodies = useMemo(() => [...bodies, ...moonBodies.filter(m => m.parentId === moonParent)], [bodies, moonBodies, moonParent]);
   const [mode, setMode] = useState<ViewMode>("solar");
   const stops = language === "en" ? englishTourStops : polishStops;
   const [reduced, setReduced] = useState(
@@ -118,8 +123,29 @@ export default function App() {
     settingsButton = useRef<HTMLButtonElement>(null),
     aboutButton = useRef<HTMLButtonElement>(null),
     aboutDialog = useRef<HTMLDialogElement>(null);
-  const body = bodies.find((b) => b.id === selected);
+  const restoreFocus = useRef(false);
+  const body = bodies.find((b) => b.id === selected) || moonBodies.find((b) => b.id === selected);
+  const navParent = body?.parentId || body?.id;
+  const parentMoons = moonBodies.filter((moon) => moon.parentId === navParent);
+  const leaveMoons = useCallback((restore = true) => {
+    if (moonContext.current && restore) {
+      simulation.current = control(simulation.current, { type: "speed", value: moonContext.current.speed });
+      setSpeed(simulation.current.speed);
+    }
+    moonContext.current = null;
+    setMoonParent(null);
+  }, []);
+  const enterMoons = useCallback((parent: string) => {
+    if (!moonContext.current) {
+      moonContext.current = { parent, speed: simulation.current.speed };
+      simulation.current = control(simulation.current, { type: "speed", value: 0.1 });
+      setSpeed(0.1);
+    } else moonContext.current.parent = parent;
+    setMoonParent(parent);
+    setTour(null);
+  }, []);
   const changeSystem = useCallback((next: SystemId) => {
+    leaveMoons();
     systemPicker.current?.focus({ preventScroll: true });
     if (next !== systemId) {
       savedSimulations.current[systemId] = simulation.current;
@@ -137,7 +163,7 @@ export default function App() {
     setSettings(false);
     setCollapsed(compactView());
     setNavigation((n) => n + 1);
-  }, [systemId, reduced, fallback]);
+  }, [systemId, reduced, fallback, leaveMoons]);
   useEffect(() => {
     let last = performance.now();
     const id = setInterval(() => {
@@ -169,23 +195,31 @@ export default function App() {
     return () => m.removeEventListener("change", change);
   }, []);
   const select = useCallback((id: string) => {
+    const parent = moonParentById[id];
+    if (parent) enterMoons(parent);
+    else leaveMoons();
     setMode("solar");
     lastTrigger.current = document.querySelector<HTMLElement>(
-      `.object-nav button[data-body-id="${id}"]`,
+      `.object-nav button[data-body-id="${parent || id}"]`,
     );
     setSelected(id);
     setNavigation((n) => n + 1);
     setCollapsed(compactView());
-  }, []);
+  }, [enterMoons, leaveMoons]);
   const home = useCallback(() => {
+    leaveMoons();
     setMode("solar");
     setSelected(null);
     setNavigation((n) => n + 1);
     setTour(null);
-    lastTrigger.current?.focus();
-  }, []);
+    restoreFocus.current = true;
+  }, [leaveMoons]);
   useEffect(() => {
     if (selected) panel.current?.focus({ preventScroll: true });
+    else if (restoreFocus.current) {
+      restoreFocus.current = false;
+      lastTrigger.current?.focus({ preventScroll: true });
+    }
   }, [selected]);
   useEffect(() => {
     const query = matchMedia("(max-width: 760px), (max-height: 500px)");
@@ -253,6 +287,7 @@ export default function App() {
     }
   };
   const switchMode = (next: ViewMode) => {
+    leaveMoons();
     if (mode !== next && !fallback) setReady(false);
     setMode(next);
     setSelected(null);
@@ -263,6 +298,7 @@ export default function App() {
   };
   const enterSolar = useCallback(() => changeSystem("solar"), [changeSystem]);
   const reset = () => {
+    leaveMoons(false);
     simulation.current = initialSimulation(reduced, initialSpeed);
     setDays(0);
     setSpeed(initialSpeed);
@@ -280,7 +316,7 @@ export default function App() {
     }).format(n);
   return (
     <main
-      className={`app ${body || mode === "galaxy" ? "has-selection" : ""} ${mode === "galaxy" ? "galaxy-mode" : "solar-mode"} ${!isSolar ? "exoplanet-mode" : ""} ${reduced ? "reduced" : ""}`}
+      className={`app ${body || mode === "galaxy" ? "has-selection" : ""} ${mode === "galaxy" ? "galaxy-mode" : "solar-mode"} ${!isSolar ? "exoplanet-mode" : ""} ${moonParent ? "moon-mode" : ""} ${reduced ? "reduced" : ""}`}
     >
       <div
         className="space"
@@ -306,7 +342,8 @@ export default function App() {
               <SolarScene
                 mode={mode}
                 systemId={systemId}
-                bodies={bodies}
+                bodies={sceneBodies}
+                moonParent={moonParent}
                 starColor={system.starColor}
                 onEnterSolar={enterSolar}
                 language={language}
@@ -535,7 +572,15 @@ export default function App() {
           <p className="artistic-notice">{t("Wygląd planet jest wizualizacją artystyczną.")}</p>
         </section>
       )}
+      {moonParent && mode === "solar" && (
+        <nav className="moon-nav" aria-label={t("Księżyce")}>
+          <button onClick={() => { leaveMoons(); select(moonParent); }}><Icon name="back" size={14} />{t("Powrót do planety")}</button>
+          <button aria-pressed={selected === moonParent} onClick={() => {setSelected(moonParent); setNavigation(n=>n+1); setCollapsed(compactView());}}>{t("Planeta i księżyce")}</button>
+          {moonBodies.filter(m=>m.parentId===moonParent).map(m=><button key={m.id} aria-label={`${t("Wybierz")} ${m.name}`} aria-pressed={selected===m.id} onClick={()=>select(m.id)}><span style={{background:m.color}} />{m.name}</button>)}
+        </nav>
+      )}
       <div className="scene-tools">
+        {parentMoons.length > 0 && !moonParent && mode === "solar" && <button className="tool-button moon-entry" aria-label={t("Odkrywaj księżyce")} onClick={()=>{enterMoons(navParent!);setNavigation(n=>n+1);}}><Icon name="moon"/><span>{t("Księżyce")}</span></button>}
         <button
           className="tool-button"
           onClick={mode === "galaxy" ? () => setNavigation((n) => n + 1) : home}
@@ -632,7 +677,7 @@ export default function App() {
             <span className="eyebrow">
               {tour !== null
                 ? `${t("PODRÓŻ")} · ${String(tour + 1).padStart(2, "0")} / 05`
-                : `${t("KATALOG")} · ${String(bodies.indexOf(body)).padStart(2, "0")} / ${String(bodies.length - 1).padStart(2, "0")}`}
+                : body.parentId ? t("KSIĘŻYC") : `${t("KATALOG")} · ${String(bodies.indexOf(body)).padStart(2, "0")} / ${String(bodies.length - 1).padStart(2, "0")}`}
             </span>
             <div className="panel-actions">
               <button
@@ -663,6 +708,7 @@ export default function App() {
           <div className="panel-content">
             <p className="description">{body.description}</p>
             {!isSolar && <p className="artistic-notice">{t("Wygląd planet jest wizualizacją artystyczną.")}</p>}
+            {body.parentId && <p className="artistic-notice">{t("Powierzchnie księżyców są interpretacją artystyczną.")}</p>}
             <dl>
               <div>
                 <dt>{isSolar ? t("ŚREDNIA ŚREDNICA") : t("SZACOWANA ŚREDNICA")}</dt>
@@ -670,6 +716,7 @@ export default function App() {
                   {format(body.diameterKm)} <span>km</span>
                 </dd>
               </div>
+              {body.distanceFromParentKm != null && <div><dt>{t("ODLEGŁOŚĆ OD PLANETY")}</dt><dd>{format(body.distanceFromParentKm)} <span>km</span></dd></div>}
               {body.distanceMillionKm !== null && (
                 <div>
                   <dt>{isSolar ? t("ODLEGŁOŚĆ OD SŁOŃCA · ŚREDNIA") : t("ODLEGŁOŚĆ OD GWIAZDY")}</dt>
@@ -680,7 +727,7 @@ export default function App() {
               )}
               {body.orbitalPeriodDays !== null && (
                 <div>
-                  <dt>{t("OKRES OBIEGU")}</dt>
+                  <dt>{body.parentId ? t("OBIEG WOKÓŁ PLANETY") : t("OKRES OBIEGU")}</dt>
                   <dd>
                     {body.orbitalPeriodDays > 700
                       ? format(body.orbitalPeriodDays / 365.25)
@@ -750,12 +797,12 @@ export default function App() {
                   </button>
                 )}
               </div>
-            ) : isSolar ? (
+            ) : isSolar && !body.parentId ? (
               <button className="panel-journey" onClick={() => step(0)}>
                 {t("Rozpocznij podróż")}
                 <Icon name="arrow" />
               </button>
-            ) : <button className="panel-journey" onClick={home}>{t("Cały układ")} <Icon name="home" /></button>}
+            ) : !isSolar ? <button className="panel-journey" onClick={home}>{t("Cały układ")} <Icon name="home" /></button> : null}
           </div>
         </section>
       )}
@@ -818,8 +865,8 @@ export default function App() {
                 aria-label={t("Szybkość symulacji")}
                 type="range"
                 min="0"
-                max={isSolar ? 100 : 5}
-                step={isSolar ? 1 : 0.05}
+                max={isSolar && !moonParent ? 100 : 5}
+                step={isSolar && !moonParent ? 1 : 0.05}
                 value={speed}
                 onChange={(e) => {
                   const value = Number(e.target.value);

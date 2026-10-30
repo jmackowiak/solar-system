@@ -12,8 +12,10 @@ export type IconName =
   | "expand"
   | "info"
   | "plus"
-  | "minus";
+  | "minus"
+  | "moon";
 const paths: Record<IconName, string> = {
+  moon: "M20 14A8.5 8.5 0 0 1 10 4a8.5 8.5 0 1 0 10 10Z",
   play: "m9 5 11 7-11 7V5Z",
   pause: "M8 5v14M16 5v14",
   reset: "M3 10a9 9 0 1 1 2 8M3 4v6h6",

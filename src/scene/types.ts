@@ -11,6 +11,7 @@ export interface SceneProps {
   systemId: SystemId;
   bodies: readonly Body[];
   starColor: string;
+  moonParent: string | null;
   onEnterSolar: () => void;
   simulation: MutableRefObject<Simulation>;
   selected: string | null;

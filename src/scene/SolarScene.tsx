@@ -4,6 +4,8 @@ import { Billboard, Html } from "@react-three/drei";
 import { OrbitControls as Controls } from "three/addons/controls/OrbitControls.js";
 import * as THREE from "three";
 import ExoplanetSurface from "./ExoplanetSurface";
+import MoonSurface from "./MoonSurface";
+import { worldPosition } from "../lib/world-position";
 import { translate } from "../i18n";
 import type { Body } from "../data/bodies";
 import { orbitalPosition, orbitPoint } from "../lib/simulation";
@@ -95,7 +97,7 @@ function Planet({
           if (!cancelled) props.onTexture(false);
         },
       );
-    if (props.systemId === "solar" && body.id !== "sun") load(`/textures/${body.id}-low.webp`, "low");
+    if (props.systemId === "solar" && !body.parentId && body.id !== "sun") load(`/textures/${body.id}-low.webp`, "low");
     return () => {
       cancelled = true;
       owned.forEach((t) => t.dispose());
@@ -104,7 +106,7 @@ function Planet({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [body.id, props.systemId, props.textureVersion, invalidate]);
   useEffect(() => {
-    if (props.systemId !== "solar" || props.selected !== body.id || body.id === "sun") return;
+    if (props.systemId !== "solar" || body.parentId || props.selected !== body.id || body.id === "sun") return;
     let cancelled = false;
     const owned: THREE.Texture[] = [];
     const loader = new THREE.TextureLoader();
@@ -150,11 +152,14 @@ function Planet({
   useFrame(() => {
     if (props.mode !== "solar" || !group.current) return;
     group.current.position.set(
-      ...orbitalPosition(body, props.simulation.current.days),
+      ...worldPosition(body, props.simulation.current.days, props.bodies),
     );
     const days = props.simulation.current.days;
     // Axial rotation uses a compressed visual rate; retrograde sign is preserved.
-    if (surface.current && body.rotationPeriodDays !== 0)
+    if (surface.current && body.parentId) {
+      const local = orbitalPosition(body, days);
+      surface.current.rotation.y = -Math.atan2(local[2], local[0]);
+    } else if (surface.current && body.rotationPeriodDays !== 0)
       surface.current.rotation.y =
         ((days * 0.12) / Math.sqrt(Math.abs(body.rotationPeriodDays))) *
         Math.sign(body.rotationPeriodDays);
@@ -169,7 +174,7 @@ function Planet({
   return (
     <group
       ref={group}
-      position={orbitalPosition(body, props.simulation.current.days)}
+      position={worldPosition(body, props.simulation.current.days, props.bodies)}
     >
       <mesh
         ref={surface}
@@ -190,7 +195,7 @@ function Planet({
             fragmentShader={sunFragment}
             uniforms={sunUniforms}
           />
-        ) : props.systemId !== "solar" ? <ExoplanetSurface body={body} high={high} host={host} /> : (
+        ) : body.parentId ? <MoonSurface body={body} high={high} host={host} /> : props.systemId !== "solar" ? <ExoplanetSurface body={body} high={high} host={host} /> : (
           <meshStandardMaterial
             key={map?.uuid || "untextured"}
             map={map}
@@ -209,7 +214,7 @@ function Planet({
         }}
         visible={true}
       >
-        <sphereGeometry args={[Math.max(r, 1.05), 16, 8]} />
+        <sphereGeometry args={[Math.max(r, body.parentId ? 0.55 : 1.05), 16, 8]} />
         <meshBasicMaterial transparent opacity={0} depthWrite={false} />
       </mesh>
       {isSun && (
@@ -330,6 +335,13 @@ function Orbit({ body, selected }: { body: Body; selected: boolean }) {
   line.material.opacity = selected ? 0.6 : 0.21;
   return <primitive object={line} />;
 }
+function SatelliteOrbits({ props }: { props: SceneProps }) {
+  const ref = useRef<THREE.Group>(null);
+  const parent = props.bodies.find(b => b.id === props.moonParent);
+  useFrame(() => { if (ref.current && parent) ref.current.position.set(...worldPosition(parent, props.simulation.current.days, props.bodies)); });
+  if (!parent) return null;
+  return <group ref={ref} position={worldPosition(parent, props.simulation.current.days, props.bodies)}>{props.bodies.filter(b=>b.parentId===parent.id).map(body=><Orbit key={body.id} body={body} selected={props.selected===body.id}/>)}</group>;
+}
 function Particles({ high, asteroidBelt }: { high: boolean; asteroidBelt: boolean }) {
   const [stars, asteroids] = useMemo(() => {
     let seed = 420;
@@ -404,6 +416,10 @@ function Engine({
   const scaleTransition = useRef<{ from: number; elapsed: number } | null>(
     null,
   );
+  const frameRadius = (id: string | null) => {
+    const body = bodies.find(b=>b.id===id);
+    return body && props.moonParent === id ? Math.max(body.displayRadius, ...bodies.filter(b=>b.parentId===id).map(m=>m.orbitRadius+m.displayRadius)) : body?.displayRadius;
+  };
   const selectedRef = useRef<{ mode: string; radius?: number }>({
     mode: props.mode,
   });
@@ -411,9 +427,11 @@ function Engine({
   useEffect(() => {
     selectedRef.current = {
       mode: props.mode,
-      radius: bodies.find((b) => b.id === props.selected)?.displayRadius,
+      radius: frameRadius(props.selected),
     };
-  }, [props.mode, props.selected, bodies]);
+  // The primitive navigation values refresh the controls' current bounding radius.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [props.mode, props.selected, props.moonParent, bodies]);
   const onFailure = props.onFailure;
   const started = useRef(false);
   const flight = useRef<{
@@ -492,7 +510,7 @@ function Engine({
     }
     const start = new THREE.Vector3(
       ...(selected
-        ? orbitalPosition(selected, props.simulation.current.days)
+        ? worldPosition(selected, props.simulation.current.days, bodies)
         : [0, 0, 0]),
     );
     following.current.copy(start);
@@ -633,7 +651,7 @@ function Engine({
     if (!c) return;
     if (selected) {
       temp.pos
-        .set(...orbitalPosition(selected, sim.days))
+        .set(...worldPosition(selected, sim.days, bodies))
         .multiplyScalar(solarScale);
       temp.pos.x += solarPosition[0] * blend;
       temp.pos.z += solarPosition[2] * blend;
@@ -645,10 +663,11 @@ function Engine({
       f.elapsed += dt;
       const t = props.reduced ? 1 : Math.min(f.elapsed / 1.65, 1),
         e = t * t * (3 - 2 * t);
-      const r = selected?.displayRadius || 0;
+      const r = frameRadius(props.selected) || 0;
       if (selected) {
-        const angle = Math.atan2(temp.pos.z, temp.pos.x) + 2.4;
-        const d = r * (selected.id === "saturn" ? 8 : size.width < 700 ? 7.5 : 6.5);
+        const local = selected.parentId ? orbitalPosition(selected, sim.days) : null;
+        const angle = local ? Math.atan2(local[2], local[0]) + 0.35 : Math.atan2(temp.pos.z, temp.pos.x) + 2.4;
+        const d = r * (props.moonParent === selected.id ? 3.4 : selected.id === "saturn" ? 8 : size.width < 700 ? 7.5 : 6.5);
         temp.dest.set(
           temp.pos.x + Math.cos(angle) * d,
           temp.pos.y + r * 2.3,
@@ -682,7 +701,7 @@ function Engine({
           props.mode === "galaxy"
             ? 500
             : selected
-              ? selected.displayRadius * 24
+              ? (frameRadius(props.selected) || selected.displayRadius) * 24
               : 420;
         c.update();
         c.enableDamping = !props.reduced;
@@ -697,7 +716,7 @@ function Engine({
     // Guard all surfaces, including when flying past a different object.
     if (props.mode === "solar" && blend < 0.0001)
       for (const b of bodies) {
-        temp.look.set(...orbitalPosition(b, sim.days));
+        temp.look.set(...worldPosition(b, sim.days, bodies));
         temp.diff.subVectors(camera.position, temp.look);
         const min = b.displayRadius * (b.id === "saturn" ? 2.45 : 1.25);
         if (temp.diff.length() < min) {
@@ -844,7 +863,7 @@ export default function SolarScene(props: SceneProps) {
           <Particles high={high} asteroidBelt={props.systemId === "solar"} />
           {props.orbits &&
             bodies
-              .slice(1)
+              .slice(1).filter(b=>!b.parentId)
               .map((body) => (
                 <Orbit
                   key={body.id}
@@ -852,6 +871,7 @@ export default function SolarScene(props: SceneProps) {
                   selected={props.selected === body.id}
                 />
               ))}
+          {props.orbits && props.moonParent && <SatelliteOrbits props={props} />}
           {bodies.map((body) => (
             <Planet
               key={body.id}
