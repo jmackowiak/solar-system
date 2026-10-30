@@ -32,7 +32,7 @@ Wynik obracamy o `periapsisAngle`. Ognisko ze Słońcem leży w początku układ
 
 `orbitalPosition(body, days)` oblicza anomalię średnią z arbitralnej fazy początkowej i czasu symulacji, a następnie rozwiązuje równanie Keplera `M = E − e sin E`. Planeta dzięki temu pokonuje większą drogę w takim samym czasie blisko peryhelium niż blisko aphelium. Nie przyspieszamy jej ręcznie w zależności od klatki.
 
-Rysunek linii orbity powinien próbkuć **`orbitPoint`** równomiernie po `E` od 0 do `2π`; pozycja planety korzysta z tej samej geometrii, ale z anomalii wynikającej z równania Keplera. Przy braku `eccentricity` i `periapsisAngle` domyślne wartości wynoszą zero, zachowując dotychczasowe kołowe orbity egzoplanet.
+Rysunek linii orbity powinien próbkować **`orbitPoint`** równomiernie po `E` od 0 do `2π`; pozycja planety korzysta z tej samej geometrii, ale z anomalii wynikającej z równania Keplera. Przy braku `eccentricity` i `periapsisAngle` domyślne wartości wynoszą zero, zachowując dotychczasowe kołowe orbity egzoplanet.
 
 Czas jest redukowany modulo okres przed pomnożeniem przez `2π`, a kąty normalizowane do zakresu od `−π` do `π`. Ogranicza to utratę precyzji przy wielu obiegach, choć nie usuwa ograniczeń reprezentacji liczb zmiennoprzecinkowych. Solver ma ograniczoną liczbę iteracji: do 12 kroków Newtona zabezpieczonych przed wyjściem z przedziału i maksymalnie 36 dodatkowych kroków bisekcji. Niepoprawne parametry elipsy powodują jawny błąd zamiast współrzędnych `NaN`.
 

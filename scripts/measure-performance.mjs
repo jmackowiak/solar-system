@@ -18,6 +18,7 @@ for (const viewport of [
   const context = await browser.newContext({
     viewport,
     deviceScaleFactor: 1,
+    reducedMotion: "no-preference",
     isMobile: viewport.width < 700,
     hasTouch: viewport.width < 700,
   });

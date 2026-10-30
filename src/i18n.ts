@@ -18,6 +18,8 @@ export function persistLanguage(language: Language) {
   }
 }
 export const english = {
+  "Szczegóły": "Details",
+  "Zwiń": "Collapse",
   "ATLAS UKŁADÓW PLANETARNYCH": "PLANETARY SYSTEMS ATLAS",
   "Układ planetarny": "Planetary system",
   "Obiekty układu planetarnego": "Planetary system objects",

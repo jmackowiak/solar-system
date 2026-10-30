@@ -17,6 +17,10 @@ const panel = (page: Page) =>
   page.getByRole("region", { name: "Informacje o obiekcie" });
 const choose = (page: Page, name: string) =>
   page.getByRole("button", { name: `Wybierz ${name}`, exact: true });
+async function expandInformation(page: Page) {
+  const expand = page.getByRole("button", { name: "Rozwiń informacje", exact: true });
+  if (await expand.count()) await expand.click();
+}
 async function ready(page: Page) {
   await page.goto("/");
   await expect(scene(page)).toHaveAttribute("data-ready", "true");
@@ -89,6 +93,7 @@ test("selects all nine objects, shows their real data, and returns to the comple
       panel(page).getByRole("heading", { level: 2, name, exact: true }),
     ).toBeVisible();
     await expect(scene(page)).toHaveAttribute("data-target", id);
+    await expandInformation(page);
     await expect(
       panel(page).getByRole("link", { name: /NASA/ }),
     ).toHaveAttribute(
@@ -283,6 +288,7 @@ test("offers useful descriptions when the renderer cannot initialize", async ({
     panel(page).getByRole("heading", { name: "Mars", exact: true }),
   ).toBeVisible();
   await expect(panel(page)).toContainText(/6\s?779/);
+  await expandInformation(page);
   await expect(panel(page).getByRole("link", { name: /NASA/ })).toBeVisible();
 });
 

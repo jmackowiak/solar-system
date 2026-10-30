@@ -502,7 +502,10 @@ function Engine({
     c.update();
     if (!started.current && !selected && props.mode === "solar") {
       started.current = true;
+      const d = size.width < 700 ? Math.max(100, 120 / Math.max(size.width / size.height, 0.2)) : 100;
+      camera.position.set(d * 0.35, d * 0.65, d * 0.82);
       camera.lookAt(start);
+      c.update();
       return;
     }
     started.current = true;
@@ -658,7 +661,7 @@ function Engine({
         );
         temp.dest.set(0.326 * fit, 0.632 * fit, 0.707 * fit);
       } else {
-        const d = size.width < 700 ? 280 : 100;
+        const d = size.width < 700 ? Math.max(100, 120 / Math.max(size.width / size.height, 0.2)) : 100;
         temp.dest.set(d * 0.35, d * 0.65, d * 0.82);
       }
       camera.position.lerpVectors(f.from, temp.dest, e);

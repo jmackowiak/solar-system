@@ -48,6 +48,9 @@ const polishStops = [
     text: "Światło Słońca dociera tu po około czterech godzinach. Dalej rozciąga się królestwo lodowych światów.",
   },
 ];
+function compactView() {
+  return window.innerWidth <= 760 || window.innerHeight <= 500;
+}
 function canRender() {
   if (new URLSearchParams(location.search).has("fallback")) return false;
   try {
@@ -102,7 +105,7 @@ export default function App() {
   const [settings, setSettings] = useState(false),
     [about, setAbout] = useState(false),
     [tour, setTour] = useState<number | null>(null),
-    [collapsed, setCollapsed] = useState(false);
+    [collapsed, setCollapsed] = useState(() => compactView());
   const [fallback, setFallback] = useState(() => !canRender()),
     [ready, setReady] = useState(false),
     [textureErrors, setTextureErrors] = useState(0),
@@ -132,7 +135,7 @@ export default function App() {
     setSelected(null);
     setTour(null);
     setSettings(false);
-    setCollapsed(false);
+    setCollapsed(compactView());
     setNavigation((n) => n + 1);
   }, [systemId, reduced, fallback]);
   useEffect(() => {
@@ -172,7 +175,7 @@ export default function App() {
     );
     setSelected(id);
     setNavigation((n) => n + 1);
-    setCollapsed(false);
+    setCollapsed(compactView());
   }, []);
   const home = useCallback(() => {
     setMode("solar");
@@ -184,6 +187,12 @@ export default function App() {
   useEffect(() => {
     if (selected) panel.current?.focus({ preventScroll: true });
   }, [selected]);
+  useEffect(() => {
+    const query = matchMedia("(max-width: 760px), (max-height: 500px)");
+    const change = (event: MediaQueryListEvent) => setCollapsed(event.matches && tour === null);
+    query.addEventListener("change", change);
+    return () => query.removeEventListener("change", change);
+  }, [tour]);
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -249,7 +258,7 @@ export default function App() {
     setSelected(null);
     setTour(null);
     setSettings(false);
-    setCollapsed(false);
+    setCollapsed(compactView());
     setNavigation((n) => n + 1);
   };
   const enterSolar = useCallback(() => changeSystem("solar"), [changeSystem]);
@@ -263,6 +272,7 @@ export default function App() {
   const step = (index: number) => {
     setTour(index);
     select(stops[index].id);
+    setCollapsed(false);
   };
   const format = (n: number) =>
     new Intl.NumberFormat(language === "en" ? "en-GB" : "pl-PL", {
@@ -470,7 +480,8 @@ export default function App() {
             <span className="tiny-cross">+</span>{" "}
             {t("TWOJE MIEJSCE WE WSZECHŚWIECIE")}
           </div>
-          <h1>
+          <h1 className="mobile-title">{t("Układ Słoneczny")}</h1>
+          <h1 className="desktop-title">
             {t("Mały punkt.")}
             <br />
             <span>{t("Wielkie odkrycia.")}</span>
@@ -538,7 +549,10 @@ export default function App() {
         <button
           ref={settingsButton}
           className={`tool-button ${settings ? "active" : ""}`}
-          onClick={() => setSettings(!settings)}
+          onClick={() => {
+            setSettings(!settings);
+            if (!settings && compactView()) setCollapsed(true);
+          }}
           aria-expanded={settings}
           aria-label={t("Ustawienia widoku")}
         >
@@ -629,6 +643,7 @@ export default function App() {
                 aria-expanded={!collapsed}
                 onClick={() => setCollapsed(!collapsed)}
               >
+                <span className="collapse-label">{collapsed ? t("Szczegóły") : t("Zwiń")}</span>
                 <Icon name="expand" />
               </button>
               <button

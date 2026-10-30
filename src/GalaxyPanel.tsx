@@ -36,6 +36,7 @@ export default function GalaxyPanel({
           aria-expanded={!collapsed}
           onClick={onCollapse}
         >
+          <span className="collapse-label">{collapsed ? t("Szczegóły") : t("Zwiń")}</span>
           <Icon name="expand" />
         </button>
       </div>

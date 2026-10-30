@@ -207,3 +207,13 @@ Pomiary nowych układów na natywnym GPU (warunki i ograniczenia w `docs/VERIFIC
 npm run preview -- --port 4174
 HEADED=1 node scripts/measure-exoplanets.mjs
 ```
+
+## Kompaktowy widok mobilny
+
+Na telefonie player ma 56 px wysokości, a karta wybranego obiektu zaczyna się
+od krótkiego podsumowania. **Szczegóły / Details** rozwijają opis; wycieczka
+z przewodnikiem otwiera go automatycznie. Na krótkich ekranach poziomych katalog
+przechodzi na lewy bok. Pełne kontrolki pauzy, tempa i resetu pozostają dostępne.
+[Zweryfikowane rozmiary i scenariusze mobilne](docs/MOBILE.md).
+
+[Model eliptycznych orbit NASA/JPL i jego uproszczenia](docs/ORBITS.md).

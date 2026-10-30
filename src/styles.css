@@ -2296,3 +2296,158 @@ h1 > span {
 @media (max-width: 760px) {
   .speed-control output { white-space: nowrap; }
 }
+
+.mobile-title, .collapse-label { display: none; }
+/* Mobile exploration: reserve a clear canvas between the compact header and dock. */
+@media (max-width: 760px) {
+  .app { --mobile-sheet: 82px; --mobile-base: calc(132px + env(safe-area-inset-bottom, 0px)); --dock-bottom: calc(16px + env(safe-area-inset-bottom, 0px)); min-height: 480px; }
+  .app:has(.object-panel:not(.collapsed)) { --mobile-sheet: min(44svh, 330px); }
+  .app.galaxy-mode { --mobile-base: calc(12px + env(safe-area-inset-bottom, 0px)); }
+  .app .topbar { height: 60px; padding: 0 14px; }
+  .app .brand { gap: 8px; }
+  .app .brand > svg { width: 24px; }
+  .app .brand > span { font-size: 18px; letter-spacing: 4px; }
+  .app .brand small { display: none; }
+  .app .language-select { min-height: 44px; height: 44px; padding: 6px; }
+  .app .mode-switch { top: 64px; left: 12px; right: 12px; padding: 2px; height: 48px; }
+  .app .mode-switch button, .app .system-picker select { min-height: 42px; height: 42px; }
+  .app.solar-mode .intro { top: 124px; left: 16px; right: 16px; height: 40px; max-width: none; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .app .intro .eyebrow, .app .intro .desktop-title, .app .intro > p:not(.artistic-notice), .app .intro .galaxy-discover, .app .system-intro .system-subtitle, .app .system-intro .system-evidence { display: none; }
+  .app .intro .mobile-title, .app .system-intro h1 { display: block; font-size: 20px; line-height: 1.2; letter-spacing: -.7px; margin: 0; }
+  .app .intro .journey-button { min-height: 40px; margin: 0; padding: 7px 11px; font-size: 10px; gap: 8px; white-space: nowrap; }
+  .app .system-intro > .artistic-notice { display: block; position: absolute; top: 44px; left: 0; margin: 0; padding-left: 7px; font-size: 8px; line-height: 12px; }
+  .app .space { top: 174px; bottom: calc(140px + env(safe-area-inset-bottom, 0px)); }
+  .app.exoplanet-mode .space { top: 190px; }
+  .app.has-selection .space, .app.has-selection:has(.collapsed) .space { top: 112px; right: 0; bottom: calc(var(--mobile-base) + var(--mobile-sheet) + 8px); }
+  .app.galaxy-mode.has-selection .space, .app.galaxy-mode.has-selection:has(.collapsed) .space { top: 112px; bottom: calc(var(--mobile-base) + var(--mobile-sheet) + 28px); }
+  .app.exoplanet-mode:not(.has-selection) .labels-layer { mask-image: none; }
+
+  .app .bottom-ui, .app.has-selection .bottom-ui, .app.has-selection:has(.collapsed) .bottom-ui { bottom: 0; left: 0; right: 0; height: auto; pointer-events: none; z-index: 16; }
+  .app .bottom-ui .control-hint { display: none; }
+  .app .simulation, .app.has-selection .simulation, .app.has-selection:has(.collapsed) .simulation { position: absolute; bottom: var(--dock-bottom); left: 12px; right: 12px; width: auto; height: 56px; min-height: 56px; margin: 0; padding: 5px 8px; flex-direction: row; gap: 8px; background: #111a22f2; pointer-events: auto; }
+  .app .simulation .play-button, .app .simulation .reset { width: 44px; height: 44px; min-width: 44px; flex-shrink: 0; margin: 0; }
+  .app .simulation .sim-time { display: block; min-width: 59px; width: 59px; }
+  .app .simulation .sim-time .eyebrow { display: none; }
+  .app .simulation .sim-time > output { font-size: 14px; line-height: 18px; }
+  .app .simulation .sim-time > output > span { font-size: 8px; }
+  .app .simulation .speed-control { display: block; flex: 1; min-width: 0; padding-left: 8px; }
+  .app .simulation .speed-control > div { display: flex; flex-direction: row; align-items: center; justify-content: space-between; gap: 4px; }
+  .app .simulation .speed-control label { font-size: 6px; line-height: 8px; letter-spacing: .5px; }
+  .app .simulation .speed-control output { font-size: 10px; line-height: 12px; white-space: nowrap; }
+  .app .simulation .speed-control output span { font-size: 8px; }
+  .app .simulation .speed-control input { display: block; height: 22px; margin: 0; }
+  .app .bottom-caption, .app.has-selection .bottom-caption { position: absolute; bottom: 0; left: 10px; right: 10px; height: 12px; min-height: 12px; margin: 0; padding: 0; display: block; overflow: hidden; border: 0; font-size: 7px; line-height: 11px; white-space: nowrap; }
+  .app .bottom-caption > span:first-child, .app .bottom-caption .coordinates { display: none; }
+
+  .app .object-nav, .app.has-selection .object-nav, .app.has-selection:has(.collapsed) .object-nav { top: auto; bottom: calc(80px + env(safe-area-inset-bottom, 0px)); left: 0; right: 0; width: auto; height: 44px; padding: 0 12px; gap: 5px; }
+  .app .object-nav > button, .app.exoplanet-mode .object-nav > button { width: auto; min-width: 62px; height: 44px; padding: 7px 10px; flex-direction: row; gap: 6px; font-size: 10px; white-space: nowrap; }
+  .app .object-nav .nav-planet { width: 13px; height: 13px; flex-shrink: 0; }
+  .app.galaxy-mode .object-nav { display: none; }
+
+  .app.has-selection .object-panel, .app.has-selection .object-panel.collapsed { top: auto; bottom: var(--mobile-base); left: 12px; right: 12px; width: auto; height: var(--mobile-sheet); padding: 14px 17px 18px; border-radius: 12px; z-index: 20; }
+  .app .object-panel.collapsed { overflow: hidden; padding-top: 18px; }
+  .app .object-panel.collapsed .panel-top { position: absolute; top: 16px; right: 14px; margin: 0; }
+  .app .object-panel.collapsed .panel-top > .eyebrow { display: none; }
+  .app .object-panel.collapsed .object-kind { display: block; width: calc(100% - 120px); font-size: 8px; line-height: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .app .object-panel.collapsed h2 { font-size: 23px; line-height: 29px; margin: 3px 0 0; padding-right: 120px; gap: 9px; white-space: nowrap; }
+  .app .object-panel.collapsed .panel-top .collapse-button { width: auto; min-width: 76px; padding: 0 6px; gap: 5px; border-radius: 6px; }
+  .app .object-panel.collapsed .collapse-label { display: inline; font-size: 10px; color: #c9b395; }
+  .app .object-panel.collapsed .collapse-button svg { width: 15px; transform: rotate(180deg); }
+  .app .galaxy-panel.collapsed h2 { padding-right: 90px; }
+  .app .object-panel h2 { font-size: 25px; }
+  .app .object-panel .panel-top { margin-top: 0; }
+
+  .app .scene-tools { right: 12px; bottom: calc(144px + env(safe-area-inset-bottom, 0px)); }
+  .app.has-selection .scene-tools, .app.has-selection:has(.collapsed) .scene-tools { right: 12px; bottom: calc(var(--mobile-base) + var(--mobile-sheet) + 14px); }
+  .app.galaxy-mode.has-selection .scene-tools, .app.galaxy-mode.has-selection:has(.collapsed) .scene-tools { left: 12px; right: auto; bottom: calc(var(--mobile-base) + var(--mobile-sheet) + 44px); }
+  .app .settings-panel { left: auto; right: 64px; bottom: calc(144px + env(safe-area-inset-bottom, 0px)); width: min(260px, calc(100vw - 88px)); max-height: calc(100svh - 280px); overflow-y: auto; }
+  .app.has-selection .settings-panel, .app.has-selection:has(.collapsed) .settings-panel { left: auto; right: 64px; bottom: calc(var(--mobile-base) + var(--mobile-sheet) + 14px); max-height: calc(100svh - var(--mobile-base) - var(--mobile-sheet) - 136px); }
+  .app.galaxy-mode .galaxy-footer, .app.galaxy-mode:has(.collapsed) .galaxy-footer { bottom: calc(var(--mobile-base) + var(--mobile-sheet) + 8px); left: 12px; right: 12px; }
+  .app .galaxy-footer p { margin: 0; font-size: 7px; }
+  .app .galaxy-footer small, .app .galaxy-footer .control-hint { display: none; }
+  .app .galaxy-marker { transform: none; }
+  .app .galaxy-marker:before { display: none; }
+  .app .fallback, .app.has-selection .fallback { padding: 12px; }
+  .app .loading-badge, .app .texture-notice { bottom: calc(144px + env(safe-area-inset-bottom, 0px)); }
+}
+@media (max-width: 370px) {
+  .app .intro .mobile-title, .app .system-intro h1 { font-size: 18px; }
+  .app .intro .journey-button { font-size: 9px; padding: 7px 9px; }
+  .app .object-panel.collapsed h2 { font-size: 21px; }
+}
+/* Short landscape screens use a side catalog and a single-row information card. */
+@media (orientation: landscape) and (max-height: 500px) {
+  .app { min-height: 0; --mobile-sheet: 44px; --mobile-base: 80px; --dock-bottom: 12px; }
+  .app .topbar { height: 52px; padding: 0 12px; pointer-events: none; }
+  .app .topbar > a, .app .top-actions { pointer-events: auto; }
+  .app .brand { gap: 7px; }
+  .app .brand > svg { width: 23px; }
+  .app .brand > span { font-size: 16px; letter-spacing: 3px; }
+  .app .brand small, .app .live-status, .app .motion-button span { display: none; }
+  .app .top-actions { gap: 0; }
+  .app .language-select { min-height: 40px; height: 40px; padding: 5px; }
+  .app .top-actions .round-button, .app .motion-button { width: 40px; height: 44px; padding: 8px; border: 0; }
+  .app .mode-switch { top: 4px; left: 145px; right: 168px; height: 44px; padding: 1px; }
+  .app .mode-switch button, .app .system-picker select { height: 40px; min-height: 40px; padding-top: 5px; padding-bottom: 5px; font-size: 9px; }
+  .app .system-picker { min-width: 0; }
+  .app .system-picker select { width: 100%; max-width: 140px; }
+  .app.solar-mode .intro { top: 60px; left: 146px; right: 16px; height: 36px; display: flex; justify-content: space-between; align-items: center; max-width: none; gap: 8px; }
+  .app .intro .eyebrow, .app .intro .desktop-title, .app .intro > p:not(.artistic-notice), .app .intro .galaxy-discover, .app .system-intro .system-subtitle, .app .system-intro .system-evidence { display: none; }
+  .app .intro .mobile-title, .app .system-intro h1 { display: block; font-size: 19px; line-height: 23px; margin: 0; letter-spacing: -.5px; }
+  .app .intro .journey-button { min-height: 36px; margin: 0; padding: 6px 10px; gap: 8px; font-size: 9px; }
+  .app .system-intro > .artistic-notice { display: block; position: absolute; top: 38px; left: 0; margin: 0; font-size: 7px; line-height: 10px; }
+  .app .space { left: 132px; right: 0; top: 104px; bottom: 80px; }
+  .app.exoplanet-mode .space { top: 112px; }
+  .app.has-selection .space, .app.has-selection:has(.collapsed) .space { left: 132px; top: 56px; bottom: 80px; right: 0; }
+  .app.has-selection:has(.object-panel:not(.collapsed)) .space { right: 284px; }
+  .app.exoplanet-mode:not(.has-selection) .labels-layer { mask-image: none; }
+  .app .object-nav, .app.has-selection .object-nav, .app.has-selection:has(.collapsed) .object-nav { left: 12px; right: auto; top: 60px; bottom: 80px; width: 116px; height: auto; display: flex; flex-direction: column; align-items: stretch; gap: 3px; padding: 0; overflow-y: auto; overflow-x: hidden; mask-image: none; }
+  .app .object-nav .nav-heading, .app .object-nav .nav-end, .app .object-nav small { display: none; }
+  .app .object-nav > button, .app.exoplanet-mode .object-nav > button { flex-shrink: 0; width: 100%; min-width: 0; height: 40px; flex-direction: row; justify-content: flex-start; gap: 6px; padding: 6px; font-size: 9px; }
+  .app .object-nav .nav-planet { width: 13px; height: 13px; flex-shrink: 0; }
+  .app .bottom-ui, .app.has-selection .bottom-ui, .app.has-selection:has(.collapsed) .bottom-ui { bottom: 0; left: 0; right: 0; height: auto; z-index: 16; pointer-events: none; }
+  .app .bottom-ui .control-hint, .app .bottom-caption { display: none; }
+  .app .simulation, .app.has-selection .simulation, .app.has-selection:has(.collapsed) .simulation { position: absolute; bottom: 12px; left: 12px; right: 12px; width: auto; height: 56px; min-height: 56px; padding: 5px 10px; margin: 0; gap: 10px; flex-direction: row; pointer-events: auto; }
+  .app .simulation .play-button, .app .simulation .reset { width: 44px; height: 44px; min-width: 44px; margin: 0; }
+  .app .simulation .sim-time { display: block; width: 70px; min-width: 70px; }
+  .app .simulation .sim-time .eyebrow { display: none; }
+  .app .simulation .sim-time > output { font-size: 14px; }
+  .app .simulation .speed-control { display: block; flex: 1; min-width: 0; padding-left: 10px; }
+  .app .simulation .speed-control > div { display: flex; flex-direction: row; align-items: center; justify-content: space-between; }
+  .app .simulation .speed-control label { font-size: 7px; }
+  .app .simulation .speed-control output { white-space: nowrap; font-size: 11px; }
+  .app .simulation .speed-control input { margin: 0; height: 22px; }
+  .app.has-selection .object-panel, .app.has-selection .object-panel.collapsed { left: auto; right: 12px; bottom: 80px; width: 260px; top: 60px; height: auto; padding: 12px 16px 16px; border-radius: 10px; }
+  .app.has-selection .object-panel.collapsed { top: auto; height: 44px; width: min(310px, calc(100vw - 164px)); padding: 0 10px; overflow: hidden; }
+  .app .object-panel.collapsed .panel-top { position: absolute; top: 0; right: 12px; margin: 0; }
+  .app .object-panel.collapsed .panel-top > .eyebrow, .app .object-panel.collapsed .object-kind { display: none; }
+  .app .object-panel.collapsed h2 { font-size: 19px; line-height: 44px; padding-right: 123px; margin: 0; gap: 7px; white-space: nowrap; }
+  .app .object-panel.collapsed .panel-top .round-button { height: 44px; width: 40px; }
+  .app .object-panel.collapsed .panel-top .collapse-button { width: auto; min-width: 76px; padding: 0 6px; gap: 5px; border-radius: 6px; }
+  .app .object-panel.collapsed .collapse-label { display: inline; font-size: 10px; color: #c9b395; }
+  .app .object-panel.collapsed .collapse-button svg { width: 15px; transform: rotate(180deg); }
+  .app .object-panel .collapse-button { display: inline-flex; }
+  .app .object-panel h2 { font-size: 25px; }
+  .app .scene-tools, .app.has-selection .scene-tools, .app.has-selection:has(.collapsed) .scene-tools { top: auto; left: 146px; right: auto; bottom: 84px; flex-direction: row; }
+  .app .settings-panel, .app.has-selection .settings-panel, .app.has-selection:has(.collapsed) .settings-panel { left: 146px; right: auto; top: auto; bottom: 84px; width: 220px; max-height: calc(100svh - 144px); overflow-y: auto; }
+  .app.galaxy-mode.has-selection .space, .app.galaxy-mode.has-selection:has(.collapsed) .space { top: 56px; left: 0; right: 0; bottom: 88px; }
+  .app.galaxy-mode.has-selection:has(.object-panel:not(.collapsed)) .space { right: 304px; bottom: 20px; }
+  .app.galaxy-mode .object-nav { display: none; }
+  .app.galaxy-mode.has-selection .object-panel { top: 60px; bottom: 12px; width: 280px; }
+  .app.galaxy-mode.has-selection .object-panel.collapsed { top: auto; height: 44px; width: 280px; }
+  .app .galaxy-panel.collapsed h2 { padding-right: 90px; }
+  .app.galaxy-mode .galaxy-footer, .app.galaxy-mode:has(.collapsed) .galaxy-footer { bottom: 62px; left: 12px; right: 12px; }
+  .app.galaxy-mode .galaxy-footer p { font-size: 7px; margin: 0; }
+  .app .galaxy-footer small, .app .galaxy-footer .control-hint { display: none; }
+  .app.galaxy-mode.has-selection .scene-tools, .app.galaxy-mode.has-selection:has(.collapsed) .scene-tools { left: 12px; bottom: 84px; }
+  .app.galaxy-mode .galaxy-marker { transform: none; }
+  .app .galaxy-marker:before { display: none; }
+  .app .loading-badge, .app .texture-notice { bottom: 84px; }
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  .app .language-select { width: 76px; min-width: 76px; max-width: 76px; }
+  .app .mode-switch { left: 140px; right: 180px; }
+  .app .mode-switch button { flex: 1; min-width: 0; padding-left: 6px; padding-right: 6px; }
+  .app .system-picker { flex: 1.25; min-width: 0; margin-left: 2px; padding-left: 4px; }
+  .app .system-picker select { min-width: 0; max-width: 100%; padding-left: 6px; padding-right: 18px; }
+}

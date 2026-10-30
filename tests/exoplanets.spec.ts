@@ -20,6 +20,10 @@ async function frames(page: Page, count = 20) {
       await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
   }, count);
 }
+async function expandInformation(page: Page) {
+  const expand = page.getByRole("button", { name: /^(Expand information|Rozwiń informacje)$/ });
+  if (await expand.count()) await expand.click();
+}
 async function ready(page: Page) {
   await page.goto("/");
   await expect(scene(page)).toHaveAttribute("data-ready", "true");
@@ -77,6 +81,7 @@ test("renders all three observed systems with complete object lists, NASA data a
     await expect(scene(page)).toHaveAttribute("data-target", `${system.id}-${system.target}`);
     await expect(panel(page).getByRole("heading", { name, exact: true })).toBeVisible();
     await expect(panel(page)).toContainText("DISTANCE FROM STAR");
+    await expandInformation(page);
     await expect(panel(page).getByRole("link", { name: /NASA/ })).toHaveAttribute(
       "href", /^https:\/\/(science\.nasa\.gov|exoplanetarchive\.ipac\.caltech\.edu|exoplanets\.nasa\.gov)/,
     );
@@ -175,6 +180,7 @@ test("supports keyboard selection and Polish content without overflowing a narro
   const info = page.getByRole("region", { name: "Informacje o obiekcie", exact: true });
   await expect(info.getByRole("heading", { name: "TRAPPIST-1 e", exact: true })).toBeVisible();
   await expect(info).toContainText("ODLEGŁOŚĆ OD GWIAZDY");
+  await expandInformation(page);
   await expect(page.getByText("Wygląd planet jest wizualizacją artystyczną.", { exact: true }).first()).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.setViewportSize({ width: 844, height: 390 });
@@ -193,6 +199,7 @@ test("opens catalog systems from the galaxy and keeps the Solar System marker po
   await expect(destinations(page).getByRole("button")).toHaveCount(9);
   await page.getByRole("button", { name: "Milky Way", exact: true }).click();
   const galaxy = page.getByRole("region", { name: "About the Milky Way", exact: true });
+  await expandInformation(page);
   await galaxy.getByRole("button", { name: "TRAPPIST-1", exact: true }).click();
   await expect(scene(page)).toHaveAttribute("data-mode", "solar");
   await expect(scene(page)).toHaveAttribute("data-system", "trappist-1");
