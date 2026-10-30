@@ -25,6 +25,10 @@ async function tool(page: Page, name: string, pl = false) {
     .getByRole("button", { name, exact: true }).click();
 }
 async function snapshot(page: Page, pl = false, close = true) {
+  // A deployed lazy galaxy can still be loading while the mode button is already selected.
+  // Wait for the actual renderer before asserting an exact captured camera.
+  await rendered(page);
+  await expect(scene(page)).toHaveAttribute("data-flight", "false");
   await tool(page, pl ? "Udostępnij widok" : "Share view", pl);
   const dialog = sharing(page, pl);
   await expect(dialog).toBeVisible();

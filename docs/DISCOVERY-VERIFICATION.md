@@ -124,3 +124,10 @@ porównania/mapy3000/faz; mapa100 — 1 desktop / 0 emulacja. Brak błędów
 aplikacji i zasobów w obu kontekstach. To nadal krótkie próby na komputerze;
 nie zastępują testu fizycznego telefonu ani nie wyjaśniają rzadszych dłuższych
 odstępów w pierwszej sekwencji.
+
+Publiczny adres `https://solar-system-six-opal.vercel.app` sprawdzono dodatkowo
+na mobilnym projekcie Playwright: **9/9** (udostępnianie wszystkich trybów,
+fokus, zoom i ponawianie tekstur). Wolniejsze doczytanie mapy galaktyki ujawniło
+brak oczekiwania na gotowy renderer w pomocniczym kodzie testu kamery;
+warunek poprawiono na rzeczywistą gotowość sceny i zakończenie przelotu,
+bez arbitralnego opóźnienia. Ponowiony cały publiczny zestaw przeszedł.
